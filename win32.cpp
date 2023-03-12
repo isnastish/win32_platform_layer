@@ -1,50 +1,73 @@
 //TODO(oleksii): 
-//[x] Create window.
-//    [x] Compute the size of the client area using AdjustWindowRect
-//    [x] Make a separate function for showing/updating the window. 
-//[x] Move window creation and window class creation to its own functions (outside main)
 //[ ] Implement error handling for window class registration and window creation, revisit the api.
-
-#define function static
-#define global static
-#define local_persist static
-
-////////////////////////////////
-//NOTE(oleksii): Platform independent code
-#include <stdint.h>
-#include <assert.h>
-
-typedef int8_t I8;
-typedef int16_t I16;
-typedef int32_t I32;
-typedef int64_t I64;
-typedef uint8_t U8;
-typedef uint16_t U16;
-typedef uint32_t U32;
-typedef uint64_t U64;
-
-typedef float F32;
-typedef double F64;
-
-typedef I32 B32;
-
-union V2{
-    struct{
-        float x, y;
-    };
-    float e[2];
-};
-
-inline function V2 v2(float x, float y){
-    V2 result = {x, y};
-    return(result);
-}
 
 #include "win32.h"
 
-#define debug_break() __debugbreak();
-
 global Win32 global_win32;
+
+function FileLoadResult win32_load_entire_file(char *file_path){
+    FileLoadResult result = {};
+    /* 
+        HANDLE file_handle = CreateFileA((LPCSTR)file_path, GENERIC_READ, FILE_SHARE_READ, 0, OPEN_EXISTING,
+                                         FILE_ATTRIBUTE_NORMAL, 0);
+        if(file_handle != INVALID_HANDLE_VALUE){
+            I64 file_size;
+            GetFileSizeEx(file_handle, (PLARGE_INTEGER)&file_size);
+            
+            //maybe it's better to cast it directly here to char * and replace void * with char * in FileLoadResult struct definition.
+            void *file_data = VirtualAlloc();
+            if(file_data){
+                BOOL ReadFile(HANDLE       hFile,
+                              LPVOID       lpBuffer,
+                              DWORD        nNumberOfBytesToRead,
+                              LPDWORD      lpNumberOfBytesRead,
+                              LPOVERLAPPED lpOverlapped);
+                
+                //if read fails!
+                VirtualFree();
+            }
+            CloseHandle(file_handle);
+        }
+        else{
+            //TODO(oleksii): Error handling or diagnostic.
+        }
+     */
+    return(result);
+}
+
+function void win32_write_to_file(void *memory){
+    //TODO(oleksii):
+}
+
+
+function void win32_switch_fullscreen(Win32 *win32){
+    //Raymond Chan's article: https://devblogs.microsoft.com/oldnewthing/20100412-00/?p=14353
+    local_persist WINDOWPLACEMENT window_placement = {};
+    window_placement.length = sizeof(window_placement);
+    
+    DWORD style = GetWindowLongA(win32->window, GWL_STYLE);
+    if(style & WS_OVERLAPPEDWINDOW){
+        MONITORINFO monitor_info = {};
+        monitor_info.cbSize = sizeof(monitor_info);
+        if(GetWindowPlacement(win32->window, &window_placement) && 
+           GetMonitorInfoA(MonitorFromWindow(win32->window, MONITOR_DEFAULTTOPRIMARY), &monitor_info)){
+            DWORD new_style = (style & ~WS_OVERLAPPEDWINDOW);
+            SetWindowLongA(win32->window, GWL_STYLE, new_style);
+            SetWindowPos(win32->window, HWND_TOP,
+                         monitor_info.rcMonitor.left, monitor_info.rcMonitor.top,
+                         monitor_info.rcMonitor.right - monitor_info.rcMonitor.left,
+                         monitor_info.rcMonitor.bottom - monitor_info.rcMonitor.top, 
+                         SWP_NOOWNERZORDER | SWP_FRAMECHANGED);
+        }
+    }
+    else{
+        SetWindowLongA(win32->window, GWL_STYLE, (style | WS_OVERLAPPEDWINDOW));
+        SetWindowPlacement(win32->window, &window_placement);
+        SetWindowPos(win32->window, 0, 0, 0, 0, 0, 
+                     SWP_NOMOVE | SWP_NOSIZE | SWP_NOZORDER |
+                     SWP_NOOWNERZORDER | SWP_FRAMECHANGED);
+    }
+}
 
 function V2 win32_get_window_metrics(Win32 *win32){
     V2 result = {};
@@ -102,9 +125,11 @@ LRESULT CALLBACK win32_main_window_procedure(HWND window, UINT message, WPARAM w
         case WM_DESTROY:{
             global_win32.running = false;
         }break;
-        
         case WM_SIZE:{
             win32_get_window_metrics(&global_win32);
+        }break;
+        case WM_LBUTTONDOWN:{
+            win32_switch_fullscreen(&global_win32);
         }break;
         
         default:{
@@ -119,6 +144,8 @@ int WINAPI WinMain(HINSTANCE instance, HINSTANCE prev_instance, PSTR cmd_line, i
     win32_register_window_class(&global_win32);
     win32_create_window(&global_win32, 1080, 720);
     win32_show_window(&global_win32);
+    
+    //win32_load_entire_file("e:/work/win32_platform_layer/code/win32.cpp");
     
     global_win32.running = true;
     while(global_win32.running){
