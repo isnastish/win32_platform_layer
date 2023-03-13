@@ -70,8 +70,9 @@ struct FileLoadResult{
 //NOTE(oleksii): Think more about where to put these functions, and about naming as well.
 //Maybe they should live in platform.h file???
 //And replace char * with String8 by adding it to basic_types.h file first.
-function FileLoadResult win32_load_entire_file(char *file_path);
-function void win32_write_to_file(void *memory);
+function FileLoadResult win32_load_entire_file_into_memory(char *file_name);
+function B32 win32_write_memory_to_file(char *file_name, I64 size, void *memory);
+function void win32_free_file_memory(void *memory);
 
 #define WIN32_H
 #endif //WIN32_H

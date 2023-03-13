@@ -2,10 +2,13 @@
 
 #include <stdint.h>
 #include <assert.h>
+//#include <limits.h>
 
 #define function static
 #define global static
 #define local_persist static
+
+#define U32Max 0xffffffffu
 
 typedef int8_t I8;
 typedef int16_t I16;

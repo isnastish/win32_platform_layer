@@ -5,40 +5,71 @@
 
 global Win32 global_win32;
 
-function FileLoadResult win32_load_entire_file(char *file_path){
+function FileLoadResult win32_load_entire_file_into_memory(char *file_name){
     FileLoadResult result = {};
-    /* 
-        HANDLE file_handle = CreateFileA((LPCSTR)file_path, GENERIC_READ, FILE_SHARE_READ, 0, OPEN_EXISTING,
-                                         FILE_ATTRIBUTE_NORMAL, 0);
-        if(file_handle != INVALID_HANDLE_VALUE){
-            I64 file_size;
-            GetFileSizeEx(file_handle, (PLARGE_INTEGER)&file_size);
-            
-            //maybe it's better to cast it directly here to char * and replace void * with char * in FileLoadResult struct definition.
-            void *file_data = VirtualAlloc();
-            if(file_data){
-                BOOL ReadFile(HANDLE       hFile,
-                              LPVOID       lpBuffer,
-                              DWORD        nNumberOfBytesToRead,
-                              LPDWORD      lpNumberOfBytesRead,
-                              LPOVERLAPPED lpOverlapped);
-                
-                //if read fails!
-                VirtualFree();
+    HANDLE file_handle = CreateFileA(file_name, GENERIC_READ, 0, 0,
+                                     OPEN_EXISTING, FILE_ATTRIBUTE_READONLY, /*FILE_ATTRIBUTE_NORMAL*/ 0);
+    if(file_handle != INVALID_HANDLE_VALUE){
+        GetFileSizeEx(file_handle, (PLARGE_INTEGER)&result.size);
+        ULARGE_INTEGER file_compressed_size;
+        file_compressed_size.LowPart = GetCompressedFileSizeA(file_name, &file_compressed_size.HighPart);
+        result.compressed_size = file_compressed_size.QuadPart;
+        
+        void *memory = VirtualAlloc(0, result.size, MEM_RESERVE | MEM_COMMIT, PAGE_READWRITE);
+        if(memory){
+            DWORD bytes_read;
+            assert(result.size <= U32Max);
+            if(ReadFile(file_handle, memory, result.size, &bytes_read, 0) &&
+               (bytes_read == result.size)){
+                result.data = memory;
             }
-            CloseHandle(file_handle);
+            else{
+                //TODO(oleksii): 
+                VirtualFree(memory, 0, MEM_RELEASE);
+                debug_break();
+            }
         }
         else{
-            //TODO(oleksii): Error handling or diagnostic.
+            //TODO(oleksii): 
+            debug_break();
         }
-     */
+        CloseHandle(file_handle);
+    }
+    else{
+        //TODO(oleksii): 
+        debug_break();
+    }
     return(result);
 }
 
-function void win32_write_to_file(void *memory){
-    //TODO(oleksii):
+function B32 win32_write_memory_to_file(char *file_name, I64 size, void *memory){
+    B32 result = false;
+    HANDLE file_handle = CreateFileA(file_name, GENERIC_WRITE, 0, 0,
+                                     CREATE_ALWAYS, FILE_ATTRIBUTE_NORMAL, 0); //0
+    if(file_handle){
+        DWORD bytes_written;
+        if(WriteFile(file_handle, memory, size, &bytes_written, 0) &&
+           (bytes_written == size)){
+            result = true;
+        }
+        else{
+            //TODO(oleksii): 
+            debug_break();
+        }
+        CloseHandle(file_handle);
+    }
+    else{
+        //TODO(oleksii): 
+        debug_break();
+    }
+    return(true);
 }
 
+function void win32_free_file_memory(void *memory){
+    if(memory){
+        VirtualFree(memory, 0, MEM_RELEASE);
+    }
+}
 
 function void win32_switch_fullscreen(Win32 *win32){
     //Raymond Chan's article: https://devblogs.microsoft.com/oldnewthing/20100412-00/?p=14353
@@ -144,8 +175,6 @@ int WINAPI WinMain(HINSTANCE instance, HINSTANCE prev_instance, PSTR cmd_line, i
     win32_register_window_class(&global_win32);
     win32_create_window(&global_win32, 1080, 720);
     win32_show_window(&global_win32);
-    
-    //win32_load_entire_file("e:/work/win32_platform_layer/code/win32.cpp");
     
     global_win32.running = true;
     while(global_win32.running){
