@@ -1,5 +1,7 @@
 //TODO(oleksii): 
 //[ ] Implement error handling for window class registration and window creation, revisit the api.
+//[ ] Load xinput.dll, XInputGetState, XInputSetState.
+//[ ] Load application dll
 
 #include "win32.h"
 
@@ -111,10 +113,50 @@ function V2 win32_get_window_metrics(Win32 *win32){
     return(result);
 }
 
+function void win32_load_app_code(Win32 *win32, char *dll_path){
+    HMODULE app_library = LoadLibraryA(dll_path);
+    if(app_library){
+        win32->app_dll = app_library;
+        win32->app_update_and_render = (AppUpdateAndRenderPtr)GetProcAddress(win32->app_dll,
+                                                                             "app_update_and_render");
+        if(!win32->app_update_and_render){
+            win32->app_update_and_render = app_update_and_render_stub;
+        }
+    }
+    else{
+        //TODO(oleksii): Error handling, failed to load the application code.
+        debug_break();
+    }
+}
+
+function void win32_unload_app_code(Win32 *win32){
+    //TODO(oleksii):
+    BOOL FreeLibrary(HMODULE hLibModule);
+}
+
+function void win32_init_xinput(Win32 *win32){
+    HMODULE xinput_library = LoadLibraryA("xinput1_4.dll");
+    xinput_library = xinput_library ? xinput_library : LoadLibraryA("xinput1_3.dll");
+    xinput_library = xinput_library ? xinput_library : LoadLibraryA("xinput9_1_0.dll");
+    if(xinput_library){
+        win32->xinput_get_state = (XinputGetStatePtr)GetProcAddress(xinput_library, "XInputGetState");
+        win32->xinput_set_state = (XinputSetStatePtr)GetProcAddress(xinput_library, "XInputSetState");
+        if(!win32->xinput_get_state && 
+           !win32->xinput_set_state){
+            win32->xinput_get_state = xinput_get_state_stub;
+            win32->xinput_set_state = xinput_set_state_stub;
+        }
+    }
+    else{
+        win32->xinput_get_state = xinput_get_state_stub;
+        win32->xinput_set_state = xinput_set_state_stub;
+    }
+}
+
 function void win32_init_gdi(Win32 *win32){
-    win32->gdi_dll = LoadLibraryA("gdi32.dll");
-    if(win32->gdi_dll){
-        win32->get_stock_object = (GetStockObjectPtr)GetProcAddress(win32->gdi_dll, "GetStockObject");
+    HMODULE gdi_library = LoadLibraryA("gdi32.dll");
+    if(gdi_library){
+        win32->get_stock_object = (GetStockObjectPtr)GetProcAddress(gdi_library, "GetStockObject");
         if(!win32->get_stock_object){
             win32->get_stock_object = get_stock_object_stub;
         }
@@ -172,9 +214,14 @@ LRESULT CALLBACK win32_main_window_procedure(HWND window, UINT message, WPARAM w
 
 int WINAPI WinMain(HINSTANCE instance, HINSTANCE prev_instance, PSTR cmd_line, int show_code){
     win32_init_gdi(&global_win32);
+    win32_init_xinput(&global_win32);
     win32_register_window_class(&global_win32);
     win32_create_window(&global_win32, 1080, 720);
     win32_show_window(&global_win32);
+    win32_load_app_code(&global_win32, "e:/work/build/application.dll");
+    
+    Memory memory = {};
+    Input input = {};
     
     global_win32.running = true;
     while(global_win32.running){
@@ -183,6 +230,18 @@ int WINAPI WinMain(HINSTANCE instance, HINSTANCE prev_instance, PSTR cmd_line, i
             TranslateMessage(&msg);
             DispatchMessageA(&msg);
         }
+        for(I32 controller_index = 0; 
+            controller_index < XUSER_MAX_COUNT; 
+            controller_index += 1){
+            XINPUT_STATE controller_state = {};
+            memset(&controller_state, 0, sizeof(XINPUT_STATE));
+            if(global_win32.xinput_get_state(controller_index, &controller_state) == ERROR_SUCCESS){
+                debug_break();
+            }
+            else{
+            }
+        }
+        global_win32.app_update_and_render(&memory, &input);
     }
     
     return(0);

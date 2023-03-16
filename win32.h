@@ -34,6 +34,7 @@
 #define NODEFERWINDOWPOS //  - DeferWindowPos routines
 #define NOMCX //             - Modem Configuration Extensions
 #include <windows.h>
+#include <xinput.h>
 
 #define debug_break() __debugbreak();
 
@@ -41,18 +42,39 @@
 typedef HGDIOBJ (*GetStockObjectPtr)(int i);
 GET_STOCK_OBJECT(get_stock_object_stub){ return(0); }
 
+#define XINPUT_GET_STATE(name) DWORD WINAPI name(DWORD dw_user_index, XINPUT_STATE *p_state)
+#define XINPUT_SET_STATE(name) DWORD WINAPI name(DWORD dw_user_index, XINPUT_VIBRATION *p_vibration)
+typedef DWORD (WINAPI *XinputGetStatePtr)(DWORD dw_user_index, XINPUT_STATE *p_state);
+typedef DWORD (WINAPI *XinputSetStatePtr)(DWORD dw_user_index, XINPUT_VIBRATION *p_vibration);
+
+XINPUT_GET_STATE(xinput_get_state_stub){
+    return(ERROR_DEVICE_NOT_CONNECTED);
+}
+
+XINPUT_SET_STATE(xinput_set_state_stub){
+    return(ERROR_DEVICE_NOT_CONNECTED);
+}
+
 struct Win32{
-    HMODULE gdi_dll;
     GetStockObjectPtr get_stock_object;
-    B32 running;
+    XinputGetStatePtr xinput_get_state;
+    XinputSetStatePtr xinput_set_state;
     
+    B32 running;
     HWND window;
     I32 window_width; //width of the client area
     I32 window_height; //height of the client area
+    
+    HMODULE               app_dll;
+    AppUpdateAndRenderPtr app_update_and_render;
+    B32                   app_is_loaded;
 };
 
 LRESULT CALLBACK win32_main_window_procedure(HWND window, UINT message, WPARAM w_param, LPARAM l_param);
-function void win32_init_gdi(Win32 *win32_state);
+function void win32_init_gdi(Win32 *win32);
+function void win32_init_xinput(Win32 *win32);
+function void win32_load_app_code(Win32 *win32, char *dll_path);
+function void win32_unload_app_code(Win32 *win32);
 function void win32_register_window_class(Win32 *win32);
 function void win32_create_window(Win32 *win32, I32 width, I32 height);
 function void win32_show_window(Win32 *win32);

@@ -9,11 +9,17 @@
 ::-O1      create small code
 ::-O2      create fast code
 
-set compiler_options=-Zi -nologo -FC -Fe:PlatformLayer.exe  
-set linker_options=user32.lib kernel32.lib
+set compile_options=-Zi -nologo -FC -Fe:PlatformLayer.exe  
+set link_options=user32.lib kernel32.lib
 
 if not exist ..\..\build (mkdir ..\..\build)
 
 pushd ..\..\build
-cl %compiler_options% ..\win32_platform_layer\code\win32.cpp /link %linker_options%
+
+::Application
+cl -nologo -Zi ..\win32_platform_layer\code\application.cpp /LD /link
+
+::Win32 Platform Layer
+cl %compile_options% ..\win32_platform_layer\code\win32.cpp /link %link_options%
+
 popd
