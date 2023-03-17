@@ -38,6 +38,10 @@
 
 #define debug_break() __debugbreak();
 
+#define XINPUT_LEFT_STICK_DEADZONE  7849
+#define XINPUT_RIGHT_STICK_DEADZONE 8689 //NOTE(oleksii): Why do we have different value for the right stick?
+#define XINPUT_TRIGGER_THRESHOLD 30
+
 #define GET_STOCK_OBJECT(name) HGDIOBJ name(int i)
 typedef HGDIOBJ (*GetStockObjectPtr)(int i);
 GET_STOCK_OBJECT(get_stock_object_stub){ return(0); }
@@ -46,14 +50,8 @@ GET_STOCK_OBJECT(get_stock_object_stub){ return(0); }
 #define XINPUT_SET_STATE(name) DWORD WINAPI name(DWORD dw_user_index, XINPUT_VIBRATION *p_vibration)
 typedef DWORD (WINAPI *XinputGetStatePtr)(DWORD dw_user_index, XINPUT_STATE *p_state);
 typedef DWORD (WINAPI *XinputSetStatePtr)(DWORD dw_user_index, XINPUT_VIBRATION *p_vibration);
-
-XINPUT_GET_STATE(xinput_get_state_stub){
-    return(ERROR_DEVICE_NOT_CONNECTED);
-}
-
-XINPUT_SET_STATE(xinput_set_state_stub){
-    return(ERROR_DEVICE_NOT_CONNECTED);
-}
+XINPUT_GET_STATE(xinput_get_state_stub){ return(ERROR_DEVICE_NOT_CONNECTED); }
+XINPUT_SET_STATE(xinput_set_state_stub){ return(ERROR_DEVICE_NOT_CONNECTED); }
 
 struct Win32{
     GetStockObjectPtr get_stock_object;

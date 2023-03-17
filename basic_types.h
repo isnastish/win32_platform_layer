@@ -1,8 +1,8 @@
 #ifndef BASIC_TYPES_H
 
+#include <stdio.h>
 #include <stdint.h>
 #include <assert.h>
-//#include <limits.h>
 
 #define function static
 #define global static
@@ -31,7 +31,7 @@ union V2{
     float e[2];
 };
 
-inline function V2 v2(float x, float y){
+inline function V2 v2(float x=0.0f, float y=0.0f){
     V2 result = {x, y};
     return(result);
 }

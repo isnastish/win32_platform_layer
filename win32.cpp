@@ -1,7 +1,8 @@
-//TODO(oleksii): 
+//[x] Load xinput.dll, XInputGetState, XInputSetState.
+//[x] Load application dll
+//[ ] Implement our own sprintf_s(char *buf, size_t buf_size, char *format, ...) function in order to be able to print debug information.
+//[ ] Add a String8 type in basic_types.h file.
 //[ ] Implement error handling for window class registration and window creation, revisit the api.
-//[ ] Load xinput.dll, XInputGetState, XInputSetState.
-//[ ] Load application dll
 
 #include "win32.h"
 
@@ -130,8 +131,10 @@ function void win32_load_app_code(Win32 *win32, char *dll_path){
 }
 
 function void win32_unload_app_code(Win32 *win32){
-    //TODO(oleksii):
-    BOOL FreeLibrary(HMODULE hLibModule);
+    if(win32->app_dll){
+        FreeLibrary(win32->app_dll);
+        win32->app_dll = 0;
+    }
 }
 
 function void win32_init_xinput(Win32 *win32){
@@ -236,7 +239,57 @@ int WINAPI WinMain(HINSTANCE instance, HINSTANCE prev_instance, PSTR cmd_line, i
             XINPUT_STATE controller_state = {};
             memset(&controller_state, 0, sizeof(XINPUT_STATE));
             if(global_win32.xinput_get_state(controller_index, &controller_state) == ERROR_SUCCESS){
-                debug_break();
+                XINPUT_GAMEPAD *gamepad = &controller_state.Gamepad;
+                U16 dpad_up = (gamepad->wButtons & XINPUT_GAMEPAD_DPAD_UP);
+                U16 dpad_down = (gamepad->wButtons & XINPUT_GAMEPAD_DPAD_DOWN);
+                U16 dpad_left = (gamepad->wButtons & XINPUT_GAMEPAD_DPAD_LEFT);
+                U16 dpad_right = (gamepad->wButtons & XINPUT_GAMEPAD_DPAD_RIGHT);
+                U16 start = (gamepad->wButtons & XINPUT_GAMEPAD_START);
+                U16 back = (gamepad->wButtons & XINPUT_GAMEPAD_BACK);
+                U16 left_thumb = (gamepad->wButtons & XINPUT_GAMEPAD_LEFT_THUMB);
+                U16 right_thumb = (gamepad->wButtons & XINPUT_GAMEPAD_RIGHT_THUMB);
+                U16 left_shoulder = (gamepad->wButtons & XINPUT_GAMEPAD_LEFT_SHOULDER);
+                U16 right_shoulder = (gamepad->wButtons & XINPUT_GAMEPAD_RIGHT_SHOULDER);
+                U16 a_button = (gamepad->wButtons & XINPUT_GAMEPAD_A);
+                U16 b_button = (gamepad->wButtons & XINPUT_GAMEPAD_B);
+                U16 x_button = (gamepad->wButtons & XINPUT_GAMEPAD_X);
+                U16 y_button = (gamepad->wButtons & XINPUT_GAMEPAD_Y);
+                
+                V2 trigger = v2(((gamepad->bLeftTrigger < 30) ? 0 : gamepad->bLeftTrigger), 
+                                ((gamepad->bRightTrigger < 30) ? 0 : gamepad->bRightTrigger));
+                V2 l_stick = v2();
+                V2 r_stick = v2();
+                
+                if((gamepad->sThumbLX > XINPUT_LEFT_STICK_DEADZONE) ||
+                   (gamepad->sThumbLX < -XINPUT_LEFT_STICK_DEADZONE)){
+                    l_stick.x = ((gamepad->sThumbLX < 0) ? 
+                                 (gamepad->sThumbLX / 32768.0f) : (gamepad->sThumbLX / 32767.0f));
+                }
+                if((gamepad->sThumbLY > XINPUT_LEFT_STICK_DEADZONE) ||
+                   (gamepad->sThumbLY < -XINPUT_LEFT_STICK_DEADZONE)){
+                    l_stick.y = ((gamepad->sThumbLY < 0) ? 
+                                 (gamepad->sThumbLY / 32768.0f) : (gamepad->sThumbLY / 32767.0f));
+                }
+                if((gamepad->sThumbRX > XINPUT_RIGHT_STICK_DEADZONE) ||
+                   (gamepad->sThumbRX < -XINPUT_RIGHT_STICK_DEADZONE)){
+                    r_stick.x = ((gamepad->sThumbRX < 0) ? 
+                                 (gamepad->sThumbRX / 32768.0f) : (gamepad->sThumbRX / 32767.0f));
+                }
+                if((gamepad->sThumbRY > XINPUT_RIGHT_STICK_DEADZONE) ||
+                   (gamepad->sThumbRY < -XINPUT_RIGHT_STICK_DEADZONE)){
+                    r_stick.y = ((gamepad->sThumbRY < 0) ? 
+                                 (gamepad->sThumbRY / 32768.0f) : (gamepad->sThumbRY / 32767.0f));
+                }
+                
+                //TODO(oleksii): Might be useful in the future to print debug information.
+                //So, not removing it for now!
+                {
+                    char DEBUG_buf[1 << 10] = {};
+                    char *fmt = "Lstick(%f, %f)\nRstick(%f, %f)\nTrigger(%f, %f)\n\n";
+                    sprintf_s(DEBUG_buf, sizeof(DEBUG_buf), fmt,
+                              l_stick.x, l_stick.y, r_stick.x, r_stick.y, trigger.x, trigger.y);
+                    OutputDebugStringA(DEBUG_buf);
+                }
             }
             else{
             }
