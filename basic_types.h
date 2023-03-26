@@ -26,15 +26,28 @@ typedef I32 B32;
 
 union V2{
     struct{
-        float x, y;
+        F32 x, y;
     };
-    float e[2];
+    F32 e[2];
 };
 
-inline function V2 v2(float x=0.0f, float y=0.0f){
+inline function V2 v2(F32 x=0.0f, F32 y=0.0f){
     V2 result = {x, y};
     return(result);
 }
+
+struct String8{
+    I64 size;
+    char *data;
+};
+
+inline String8 make_string8(I64 size, char *str){
+    String8 result = {size, str};
+    return(result);
+}
+
+#define Str8(str) make_string8((sizeof(str) - 1), (str))
+#define Str8Comp(str) {(sizeof(str) - 1), (str)}
 
 #define BASIC_TYPES_H
 #endif //BASIC_TYPES_H

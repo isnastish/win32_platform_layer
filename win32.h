@@ -39,60 +39,36 @@
 #define debug_break() __debugbreak();
 
 #define XINPUT_LEFT_STICK_DEADZONE  7849
-#define XINPUT_RIGHT_STICK_DEADZONE 8689 //NOTE(oleksii): Why do we have different value for the right stick?
+#define XINPUT_RIGHT_STICK_DEADZONE 8689
 #define XINPUT_TRIGGER_THRESHOLD 30
 
 #define GET_STOCK_OBJECT(name) HGDIOBJ name(int i)
-typedef HGDIOBJ (*GetStockObjectPtr)(int i);
+typedef HGDIOBJ (WINAPI *GetStockObjectPtr)(int i);
 GET_STOCK_OBJECT(get_stock_object_stub){ return(0); }
+global GetStockObjectPtr get_stock_object_ptr = get_stock_object_stub;
+#define GetStockObject get_stock_object_ptr
 
 #define XINPUT_GET_STATE(name) DWORD WINAPI name(DWORD dw_user_index, XINPUT_STATE *p_state)
-#define XINPUT_SET_STATE(name) DWORD WINAPI name(DWORD dw_user_index, XINPUT_VIBRATION *p_vibration)
-typedef DWORD (WINAPI *XinputGetStatePtr)(DWORD dw_user_index, XINPUT_STATE *p_state);
-typedef DWORD (WINAPI *XinputSetStatePtr)(DWORD dw_user_index, XINPUT_VIBRATION *p_vibration);
+typedef DWORD (WINAPI *XInputGetStatePtr)(DWORD dw_user_index, XINPUT_STATE *p_state);
 XINPUT_GET_STATE(xinput_get_state_stub){ return(ERROR_DEVICE_NOT_CONNECTED); }
+global XInputGetStatePtr xinput_get_state_ptr = xinput_get_state_stub;
+#define XInputGetState xinput_get_state_ptr
+
+#define XINPUT_SET_STATE(name) DWORD WINAPI name(DWORD dw_user_index, XINPUT_VIBRATION *p_vibration)
+typedef DWORD (WINAPI *XInputSetStatePtr)(DWORD dw_user_index, XINPUT_VIBRATION *p_vibration);
 XINPUT_SET_STATE(xinput_set_state_stub){ return(ERROR_DEVICE_NOT_CONNECTED); }
+global XInputSetStatePtr xinput_set_state_ptr = xinput_set_state_stub;
+#define XInputSetState xinput_set_state_ptr
 
-struct Win32{
-    GetStockObjectPtr get_stock_object;
-    XinputGetStatePtr xinput_get_state;
-    XinputSetStatePtr xinput_set_state;
-    
-    B32 running;
-    HWND window;
-    I32 window_width; //width of the client area
-    I32 window_height; //height of the client area
-    
-    HMODULE               app_dll;
-    AppUpdateAndRenderPtr app_update_and_render;
-    B32                   app_is_loaded;
+struct Win32State{
+    //Just a placeholder for all the global variables.(device_context, global_running ...)
 };
 
-LRESULT CALLBACK win32_main_window_procedure(HWND window, UINT message, WPARAM w_param, LPARAM l_param);
-function void win32_init_gdi(Win32 *win32);
-function void win32_init_xinput(Win32 *win32);
-function void win32_load_app_code(Win32 *win32, char *dll_path);
-function void win32_unload_app_code(Win32 *win32);
-function void win32_register_window_class(Win32 *win32);
-function void win32_create_window(Win32 *win32, I32 width, I32 height);
-function void win32_show_window(Win32 *win32);
-function V2 win32_get_window_metrics(Win32 *win32);
-function void win32_switch_fullscreen(Win32 *win32);
-
-//NOTE(oleksii): This struct is not platform specific and should be moved out to a different file.
-//Will have to think about it more when we load our application as a .dll
-struct FileLoadResult{
-    I64 size;
-    I64 compressed_size;
-    void *data;
+struct Win32AppCode{
+    HMODULE dll;
+    AppUpdateAndRenderPtr update_and_render;
+    B32 loaded;
 };
-
-//NOTE(oleksii): Think more about where to put these functions, and about naming as well.
-//Maybe they should live in platform.h file???
-//And replace char * with String8 by adding it to basic_types.h file first.
-function FileLoadResult win32_load_entire_file_into_memory(char *file_name);
-function B32 win32_write_memory_to_file(char *file_name, I64 size, void *memory);
-function void win32_free_file_memory(void *memory);
 
 #define WIN32_H
 #endif //WIN32_H

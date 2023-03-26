@@ -9,17 +9,14 @@
 ::-O1      create small code
 ::-O2      create fast code
 
-set compile_options=-Zi -nologo -FC -Fe:PlatformLayer.exe  
+set compile_options=-Zi -nologo -FC -DINTERNAL_BUILD
 set link_options=user32.lib kernel32.lib
 
 if not exist ..\..\build (mkdir ..\..\build)
-
 pushd ..\..\build
+::Build application dll
+cl %compile_options% ..\win32_platform_layer\code\application.cpp /LD /link
 
-::Application
-cl -nologo -Zi ..\win32_platform_layer\code\application.cpp /LD /link
-
-::Win32 Platform Layer
-cl %compile_options% ..\win32_platform_layer\code\win32.cpp /link %link_options%
-
+::Build (win32) platform layer
+cl %compile_options% -Fe:PlatformLayer.exe ..\win32_platform_layer\code\win32.cpp /link %link_options%
 popd
