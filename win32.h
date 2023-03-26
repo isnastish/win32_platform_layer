@@ -35,18 +35,13 @@
 #define NOMCX //             - Modem Configuration Extensions
 #include <windows.h>
 #include <xinput.h>
+#include <gl/gl.h>
 
 #define debug_break() __debugbreak();
 
 #define XINPUT_LEFT_STICK_DEADZONE  7849
 #define XINPUT_RIGHT_STICK_DEADZONE 8689
 #define XINPUT_TRIGGER_THRESHOLD 30
-
-#define GET_STOCK_OBJECT(name) HGDIOBJ name(int i)
-typedef HGDIOBJ (WINAPI *GetStockObjectPtr)(int i);
-GET_STOCK_OBJECT(get_stock_object_stub){ return(0); }
-global GetStockObjectPtr get_stock_object_ptr = get_stock_object_stub;
-#define GetStockObject get_stock_object_ptr
 
 #define XINPUT_GET_STATE(name) DWORD WINAPI name(DWORD dw_user_index, XINPUT_STATE *p_state)
 typedef DWORD (WINAPI *XInputGetStatePtr)(DWORD dw_user_index, XINPUT_STATE *p_state);
@@ -59,6 +54,30 @@ typedef DWORD (WINAPI *XInputSetStatePtr)(DWORD dw_user_index, XINPUT_VIBRATION 
 XINPUT_SET_STATE(xinput_set_state_stub){ return(ERROR_DEVICE_NOT_CONNECTED); }
 global XInputSetStatePtr xinput_set_state_ptr = xinput_set_state_stub;
 #define XInputSetState xinput_set_state_ptr
+
+typedef BOOL (WINAPI *WglChoosePixelFormatARBPtr)(HDC hdc, const int *piAttribIList, const FLOAT *pfAttribFList, UINT nMaxFormats, int *piFormats, UINT *nNumFormats);
+typedef HGLRC (WINAPI *WglCreateContextAttribsARBPtr)(HDC hDC, HGLRC hShareContext, const int *attribList);
+
+global WglChoosePixelFormatARBPtr wglChoosePixelFormatARB;
+global WglCreateContextAttribsARBPtr wglCreateContextAttribsARB;
+
+#define WGL_CONTEXT_MAJOR_VERSION_ARB     0x2091
+#define WGL_CONTEXT_MINOR_VERSION_ARB     0x2092
+#define WGL_CONTEXT_PROFILE_MASK_ARB      0x9126
+#define WGL_CONTEXT_CORE_PROFILE_BIT_ARB  0x00000001
+#define WGL_CONTEXT_COMPATIBILITY_PROFILE_BIT_ARB 0x00000002
+
+#define WGL_DRAW_TO_WINDOW_ARB            0x2001
+#define WGL_SUPPORT_OPENGL_ARB            0x2010
+#define WGL_DOUBLE_BUFFER_ARB             0x2011
+#define WGL_PIXEL_TYPE_ARB                0x2013
+#define WGL_COLOR_BITS_ARB                0x2014
+#define WGL_DEPTH_BITS_ARB                0x2022
+#define WGL_STENCIL_BITS_ARB              0x2023
+#define WGL_TYPE_RGBA_ARB                 0x202B
+
+#define GL_MAJOR_VERSION                  0x821B
+#define GL_MINOR_VERSION                  0x821C
 
 struct Win32State{
     //Just a placeholder for all the global variables.(device_context, global_running ...)

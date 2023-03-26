@@ -7,5 +7,5 @@
 
 APPAPI APP_UPDATE_AND_RENDER(app_update_and_render){
     platform_ptr = platform;
-    FileLoadResult result = platform_ptr->load_entire_file("e:/work/win32_platform_layer/code/win32.cpp");
+    //FileLoadResult result = platform_ptr->load_entire_file("e:/work/win32_platform_layer/code/win32.cpp");
 }
