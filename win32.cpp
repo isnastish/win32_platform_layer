@@ -1,106 +1,72 @@
 //TODO:
 //
+//[x] Finish todos for error handling
 //[x] Refactor the codebase, make everything explicit!
-//[ ] Init OpenGL, load opengl procedures
-//[ ] Finish todos for error handling
+//[x] Create functions for memory allocation/deallocation so we can call them in the application
+//    (in case we need some additional memory)
+//[x] Init OpenGL, load opengl procedures
+//    [ ] Move platform-specific opengl code (wgl) to its own file.
+//    [ ] Experiment with opengl expentions to understand them better.
+//    [ ] Learn about Vsync and get it to work, I'm assuming using wglSwapIntervalsEXT function?
+//    [ ] Move platform-independent opengl code in win32.h somewhere else, because it shouldn't really be there.
+//        OpenglInfo struct and gl_get_info() procedure.
+//[ ] Finish loading app_code as a dll. Implement live code editing. use FILETIME? GetFileTime, SetFileTime.
 //[ ] Implement our own sprintf function with %v2, %v3, %v4, %m2, %m3, %m4 formats (and all the standart formats as well)
 
 #include "win32.h"
+#include "win32_opengl.cpp"
 
 ////////////////////////////////
 //NOTE(oleksii): Global variables
 global B32 global_running;
 global Win32AppCode global_app_code;
-global HGLRC global_opengl_rendering_context;
 
-function void *win32_load_opengl_procedure(char *proc_name){
-    void *proc = (void *)wglGetProcAddress(proc_name);
-    if(proc == 0 ||
-       (proc == (void*)0x1) || (proc == (void*)0x2) || (proc == (void*)0x3) ||
-       (proc == (void*)-1)){
-        HMODULE opengl_library = LoadLibraryA("opengl32.dll");
-        proc = (void *)GetProcAddress(opengl_library, proc_name);
-    }
-    return(proc);
-}
 
-function void win32_delete_opengl_context(HDC device_context, HGLRC rendering_context){
-    wglMakeCurrent(device_context, 0);
-    wglDeleteContext(rendering_context);
-}
-
-function B32 win32_init_opengl(HDC device_context){
-    B32 result = false;
-    PIXELFORMATDESCRIPTOR desired_pfd = {};
-    desired_pfd.nSize = sizeof(PIXELFORMATDESCRIPTOR);
-    desired_pfd.nVersion = 1;
-    desired_pfd.dwFlags = (PFD_DRAW_TO_WINDOW|PFD_SUPPORT_OPENGL|PFD_DOUBLEBUFFER);
-    desired_pfd.iPixelType = PFD_TYPE_RGBA;
-    desired_pfd.cColorBits = 32;
-    desired_pfd.cDepthBits = 24;
-    desired_pfd.cStencilBits = 8;
-    desired_pfd.iLayerType = PFD_MAIN_PLANE;
+function void win32_get_file_write_time(char *file_name){
+    BOOL SetFileTime(HANDLE hFile,
+                     const FILETIME *lpCreationTime,
+                     const FILETIME *lpLastAccessTime,
+                     const FILETIME *lpLastWriteTime);
     
-    I32 pixel_format_index = ChoosePixelFormat(device_context, &desired_pfd);
-    PIXELFORMATDESCRIPTOR suggested_pfd = {};
-    DescribePixelFormat(device_context, pixel_format_index,
-                        sizeof(PIXELFORMATDESCRIPTOR), &suggested_pfd);
-    if(SetPixelFormat(device_context, pixel_format_index, &suggested_pfd) == TRUE){
-        HGLRC dummy_opengl_rendering_context = wglCreateContext(device_context);
-        wglMakeCurrent(device_context, dummy_opengl_rendering_context);
-        wglChoosePixelFormatARB = (WglChoosePixelFormatARBPtr)win32_load_opengl_procedure("wglChoosePixelFormatARB");
-        const I32 attrib_list[]={
-            WGL_DRAW_TO_WINDOW_ARB, GL_TRUE,
-            WGL_SUPPORT_OPENGL_ARB, GL_TRUE,
-            WGL_DOUBLE_BUFFER_ARB, GL_TRUE,
-            WGL_PIXEL_TYPE_ARB, WGL_TYPE_RGBA_ARB,
-            WGL_COLOR_BITS_ARB, 32,
-            WGL_DEPTH_BITS_ARB, 24,
-            WGL_STENCIL_BITS_ARB, 8,
-            0,
-        };
-        I32 pixel_format;
-        U32 formats_count;
-        if(wglChoosePixelFormatARB(device_context, attrib_list, 0, 1, &pixel_format, &formats_count) != FALSE){
-            wglCreateContextAttribsARB = (WglCreateContextAttribsARBPtr)win32_load_opengl_procedure("wglCreateContextAttribsARB");
-            const I32 create_context_attrib_list[]={
-                WGL_CONTEXT_MAJOR_VERSION_ARB, 3,
-                WGL_CONTEXT_MINOR_VERSION_ARB, 3,
-                WGL_CONTEXT_PROFILE_MASK_ARB, WGL_CONTEXT_COMPATIBILITY_PROFILE_BIT_ARB,
-                0,
-            };
-            global_opengl_rendering_context = wglCreateContextAttribsARB(device_context, dummy_opengl_rendering_context, 
-                                                                         create_context_attrib_list);
-            win32_delete_opengl_context(device_context, dummy_opengl_rendering_context);
-            wglMakeCurrent(device_context, global_opengl_rendering_context);
-            result = true;
-        }
-        else{
-            //TODO(oleksii): error handling (failed to choose pixel format ARB)
-        }
-    }
-    else{
-        //TODO(oleksii): error handling (failed to set pixel format for device context)
-    }
+    LONG CompareFileTime(const FILETIME *lpFileTime1,
+                         const FILETIME *lpFileTime2);
+    
+    BOOL GetFileTime(HANDLE hFile,
+                     LPFILETIME lpCreationTime,
+                     LPFILETIME lpLastAccessTime,
+                     LPFILETIME lpLastWriteTime);
+}
+
+PLATFORM_ALLOCATE_MEMORY(win32_allocate_memory){
+    I64 alloc_size = size;
+    void *result = VirtualAlloc(base_address, alloc_size, MEM_RESERVE|MEM_COMMIT, PAGE_READWRITE);
+    assert(result);
     return(result);
+}
+
+PLATFORM_FREE_MEMORY(win32_free_memory){
+    if(memory){
+        VirtualFree(memory, 0, MEM_RELEASE);
+    }
 }
 
 function void win32_load_app_code(Win32AppCode *app_code, char *dll_name){
     app_code->dll = LoadLibraryA(dll_name);
     if(app_code->dll){
-        app_code->update_and_render = 
-            (AppUpdateAndRenderPtr)GetProcAddress(app_code->dll, "app_update_and_render");
-        if(!app_code->update_and_render){
-            app_code->update_and_render = app_update_and_render_stub;
-            app_code->loaded = true;
+        app_code->update_and_render = (AppUpdateAndRenderPtr)GetProcAddress(app_code->dll, "app_update_and_render");
+        if(app_code->update_and_render){
+            app_code->valid = true;
         }
+    }
+    if(!app_code->valid){
+        app_code->update_and_render = 0;
     }
 }
 
 function void win32_unload_app_code(Win32AppCode *app_code){
     if(app_code->dll){
         FreeLibrary(app_code->dll);
-        app_code->loaded = false;
+        app_code->valid = false;
     }
 }
 
@@ -111,7 +77,7 @@ function void win32_init_xinput(){
     if(xinput_library){
         XInputGetState = (XInputGetStatePtr)GetProcAddress(xinput_library, "XInputGetState");
         XInputSetState = (XInputSetStatePtr)GetProcAddress(xinput_library, "XInputSetState");
-        if(!XInputGetState && 
+        if(!XInputGetState &&
            !XInputSetState){
             XInputGetState = xinput_get_state_stub;
             XInputSetState = xinput_set_state_stub;
@@ -119,7 +85,8 @@ function void win32_init_xinput(){
     }
 }
 
-function FileLoadResult win32_load_entire_file(char *file_name){
+function 
+DEBUG_PLATFORM_LOAD_ENTIRE_FILE(win32_load_entire_file){
     FileLoadResult result = {};
     HANDLE file_handle = CreateFileA(file_name, GENERIC_READ, 0, 0, OPEN_EXISTING, FILE_ATTRIBUTE_READONLY, 0);
     if(file_handle != INVALID_HANDLE_VALUE){
@@ -151,7 +118,8 @@ function FileLoadResult win32_load_entire_file(char *file_name){
     return(result);
 }
 
-function B32 win32_write_entire_file(char *file_name, I64 size, void *memory){
+function 
+DEBUG_PLATFORM_WRITE_ENTIRE_FILE(win32_write_entire_file){
     B32 result = false;
     HANDLE file_handle = CreateFileA(file_name, GENERIC_WRITE, 0, 0, CREATE_ALWAYS, FILE_ATTRIBUTE_NORMAL, 0);
     if(file_handle){
@@ -171,7 +139,8 @@ function B32 win32_write_entire_file(char *file_name, I64 size, void *memory){
     return(result);
 }
 
-function void win32_free_file(void *memory){
+function 
+DEBUG_PLATFORM_FREE_FILE(win32_free_file){
     if(memory){
         VirtualFree(memory, 0, MEM_RELEASE);
     }
@@ -246,10 +215,12 @@ LRESULT CALLBACK win32_main_window_procedure(HWND window, UINT message, WPARAM w
 }
 
 int WINAPI WinMain(HINSTANCE instance, HINSTANCE prev_instance, PSTR cmd_line, int show_code){
-    Platform platform = {};
+    PlatformApi platform = {};
     platform.load_entire_file = win32_load_entire_file;
     platform.write_entire_file = win32_write_entire_file;
     platform.free_file = win32_free_file;
+    platform.allocate_memory = win32_allocate_memory;
+    platform.free_memory = win32_free_memory;
     
     win32_init_xinput();
     win32_load_app_code(&global_app_code, "e:/work/build/application.dll");
@@ -273,6 +244,9 @@ int WINAPI WinMain(HINSTANCE instance, HINSTANCE prev_instance, PSTR cmd_line, i
             UpdateWindow(window);
             HDC device_context = GetDC(window);
             if(win32_init_opengl(device_context)){
+                Memory memory = {};
+                memory.platform = &platform;
+                
                 global_running = true;
                 while(global_running){
                     MSG msg;
@@ -338,9 +312,9 @@ int WINAPI WinMain(HINSTANCE instance, HINSTANCE prev_instance, PSTR cmd_line, i
                         else{
                         }
                     }
-                    glClearColor(157.0f/255.0f, 130.0f/255.0f, 97.0f/255.0f, 1.0f);
-                    glClear(GL_COLOR_BUFFER_BIT);
-                    global_app_code.update_and_render(&platform);
+                    //glClearColor(157.0f/255.0f, 130.0f/255.0f, 97.0f/255.0f, 1.0f);
+                    //glClear(GL_COLOR_BUFFER_BIT);
+                    global_app_code.update_and_render(&memory);
                     SwapBuffers(device_context);
                 }
                 win32_delete_opengl_context(device_context, global_opengl_rendering_context);

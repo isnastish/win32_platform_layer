@@ -55,29 +55,27 @@ XINPUT_SET_STATE(xinput_set_state_stub){ return(ERROR_DEVICE_NOT_CONNECTED); }
 global XInputSetStatePtr xinput_set_state_ptr = xinput_set_state_stub;
 #define XInputSetState xinput_set_state_ptr
 
-typedef BOOL (WINAPI *WglChoosePixelFormatARBPtr)(HDC hdc, const int *piAttribIList, const FLOAT *pfAttribFList, UINT nMaxFormats, int *piFormats, UINT *nNumFormats);
-typedef HGLRC (WINAPI *WglCreateContextAttribsARBPtr)(HDC hDC, HGLRC hShareContext, const int *attribList);
+////////////////////////////////
+//NOTE(oleksii): OpenGL (should be moved out to a different file)
+#define GL_SHADING_LANGUAGE_VERSION       0x8B8C
+struct OpenglInfo{
+    char *vendor;
+    char *renderer;
+    char *version;
+    char *shading_language_version;
+    char *extensions;
+};
 
-global WglChoosePixelFormatARBPtr wglChoosePixelFormatARB;
-global WglCreateContextAttribsARBPtr wglCreateContextAttribsARB;
-
-#define WGL_CONTEXT_MAJOR_VERSION_ARB     0x2091
-#define WGL_CONTEXT_MINOR_VERSION_ARB     0x2092
-#define WGL_CONTEXT_PROFILE_MASK_ARB      0x9126
-#define WGL_CONTEXT_CORE_PROFILE_BIT_ARB  0x00000001
-#define WGL_CONTEXT_COMPATIBILITY_PROFILE_BIT_ARB 0x00000002
-
-#define WGL_DRAW_TO_WINDOW_ARB            0x2001
-#define WGL_SUPPORT_OPENGL_ARB            0x2010
-#define WGL_DOUBLE_BUFFER_ARB             0x2011
-#define WGL_PIXEL_TYPE_ARB                0x2013
-#define WGL_COLOR_BITS_ARB                0x2014
-#define WGL_DEPTH_BITS_ARB                0x2022
-#define WGL_STENCIL_BITS_ARB              0x2023
-#define WGL_TYPE_RGBA_ARB                 0x202B
-
-#define GL_MAJOR_VERSION                  0x821B
-#define GL_MINOR_VERSION                  0x821C
+function OpenglInfo gl_get_info(){
+    OpenglInfo info = {};
+    info.vendor = (char *)glGetString(GL_VENDOR);
+    info.renderer = (char *)glGetString(GL_RENDERER);
+    info.version = (char *)glGetString(GL_VERSION);
+    info.shading_language_version = (char *)glGetString(GL_SHADING_LANGUAGE_VERSION);
+    info.extensions = (char *)glGetString(GL_EXTENSIONS);
+    return(info);
+}
+////////////////////////////////
 
 struct Win32State{
     //Just a placeholder for all the global variables.(device_context, global_running ...)
@@ -86,7 +84,7 @@ struct Win32State{
 struct Win32AppCode{
     HMODULE dll;
     AppUpdateAndRenderPtr update_and_render;
-    B32 loaded;
+    B32 valid;
 };
 
 #define WIN32_H
