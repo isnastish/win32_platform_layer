@@ -9,6 +9,10 @@
 #define local_persist static
 
 #define U32Max 0xffffffffu
+#define Terabytes(n) ((n)*(1024ull)*(1024ull)*(1024ull)*(1024ull))
+#define Gigabytes(n) ((n)*(1024ull)*(1024ull)*(1024ull))
+#define Megabytes(n) ((n)*(1024ull)*(1024ull))
+#define Kilobytes(n) ((n)*(1024ull))
 
 typedef int8_t I8;
 typedef int16_t I16;

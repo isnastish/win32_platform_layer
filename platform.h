@@ -46,10 +46,14 @@ struct Memory{
     PlatformApi *platform;
 };
 
+struct Input{
+    
+};
+
 global PlatformApi *platform;
 
-#define APP_UPDATE_AND_RENDER(name) void name(Memory *memory)
-typedef void (*AppUpdateAndRenderPtr)(Memory *memory);
+#define APP_UPDATE_AND_RENDER(name) void name(Input *input, Memory *memory)
+typedef void (*AppUpdateAndRenderPtr)(Input *input, Memory *memory);
 
 #define PLATFORM_H
 #endif //PLATFORM_H

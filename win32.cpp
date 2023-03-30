@@ -6,7 +6,7 @@
 //    (in case we need some additional memory)
 //[x] Init OpenGL, load opengl procedures
 //    [ ] Move platform-specific opengl code (wgl) to its own file.
-//    [ ] Experiment with opengl expentions to understand them better.
+//    [ ] Experiment with opengl extensions to understand them better.
 //    [ ] Learn about Vsync and get it to work, I'm assuming using wglSwapIntervalsEXT function?
 //    [ ] Move platform-independent opengl code in win32.h somewhere else, because it shouldn't really be there.
 //        OpenglInfo struct and gl_get_info() procedure.
@@ -245,7 +245,26 @@ int WINAPI WinMain(HINSTANCE instance, HINSTANCE prev_instance, PSTR cmd_line, i
             HDC device_context = GetDC(window);
             if(win32_init_opengl(device_context)){
                 Memory memory = {};
+                memory.frame_storage_size = Gigabytes(2);
+                memory.permanent_storage_size = Gigabytes(2);
+                void *base_address = 0;
+#if INTERNAL_BUILD
+                base_address = (void *)Terabytes(8);
+#endif
+                memory.frame_storage = VirtualAlloc(base_address, 
+                                                    (memory.frame_storage_size + memory.permanent_storage_size),
+                                                    MEM_RESERVE|MEM_COMMIT,
+                                                    PAGE_READWRITE);
+                memory.permanent_storage = (void *)((char *)memory.frame_storage + memory.frame_storage_size);
                 memory.platform = &platform;
+                //NOTE(oleksii): Just assert for now to avoid deep nesting with if statements.
+                assert(memory.frame_storage && memory.permanent_storage);
+                
+                //TODO(oleksii): Experiment with different inputs, event-driven (but without memory allocation)
+                //just introduce and array of events probably [4096] events can be stored per frame.
+                //Try to understand Casey's approach on how to write input systems. Choos which one is better.
+                //But do it only after opengl clean up, so we can easily test the input.
+                Input input = {};
                 
                 global_running = true;
                 while(global_running){
@@ -312,9 +331,7 @@ int WINAPI WinMain(HINSTANCE instance, HINSTANCE prev_instance, PSTR cmd_line, i
                         else{
                         }
                     }
-                    //glClearColor(157.0f/255.0f, 130.0f/255.0f, 97.0f/255.0f, 1.0f);
-                    //glClear(GL_COLOR_BUFFER_BIT);
-                    global_app_code.update_and_render(&memory);
+                    global_app_code.update_and_render(&input, &memory);
                     SwapBuffers(device_context);
                 }
                 win32_delete_opengl_context(device_context, global_opengl_rendering_context);

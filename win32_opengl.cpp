@@ -15,10 +15,12 @@
 
 typedef BOOL (WINAPI *WglChoosePixelFormatARBPtr)(HDC hdc, const int *piAttribIList, const FLOAT *pfAttribFList, UINT nMaxFormats, int *piFormats, UINT *nNumFormats);
 typedef HGLRC (WINAPI *WglCreateContextAttribsARBPtr)(HDC hDC, HGLRC hShareContext, const int *attribList);
+typedef BOOL (WINAPI *WglSwapInternalEXTPtr)(int interval);
 
 global WglChoosePixelFormatARBPtr wglChoosePixelFormatARB;
 global WglCreateContextAttribsARBPtr wglCreateContextAttribsARB;
-global const I32 global_choose_pixel_format_attrib_list[]={
+global WglSwapInternalEXTPtr wglSwapInternalEXT;
+global I32 global_choose_pixel_format_attrib_list[]={
     WGL_DRAW_TO_WINDOW_ARB, GL_TRUE,
     WGL_SUPPORT_OPENGL_ARB, GL_TRUE,
     WGL_DOUBLE_BUFFER_ARB, GL_TRUE,
@@ -28,7 +30,7 @@ global const I32 global_choose_pixel_format_attrib_list[]={
     WGL_STENCIL_BITS_ARB, 8,
     0,
 };
-global const I32 global_create_context_attrib_list[]={
+global I32 global_create_context_attrib_list[]={
     WGL_CONTEXT_MAJOR_VERSION_ARB, 3,
     WGL_CONTEXT_MINOR_VERSION_ARB, 3,
     WGL_CONTEXT_PROFILE_MASK_ARB, WGL_CONTEXT_COMPATIBILITY_PROFILE_BIT_ARB,
@@ -69,11 +71,20 @@ function B32 win32_init_opengl(HDC device_context){
     PIXELFORMATDESCRIPTOR suggested_pfd = {};
     DescribePixelFormat(device_context, pixel_format_index,
                         sizeof(PIXELFORMATDESCRIPTOR), &suggested_pfd);
-    if(SetPixelFormat(device_context, pixel_format_index, &suggested_pfd) == TRUE){
-        HGLRC dummy_opengl_rendering_context = wglCreateContext(device_context);
+    SetPixelFormat(device_context, pixel_format_index, &suggested_pfd);
+    HGLRC dummy_opengl_rendering_context = wglCreateContext(device_context);
+    if(dummy_opengl_rendering_context){
         wglMakeCurrent(device_context, dummy_opengl_rendering_context);
+        
+        //TODO(oleksii): Move loading wgl procedures to its own function!
         wglChoosePixelFormatARB = (WglChoosePixelFormatARBPtr)win32_load_opengl_procedure("wglChoosePixelFormatARB");
-        const I32 attrib_list[]={
+        wglCreateContextAttribsARB = (WglCreateContextAttribsARBPtr)win32_load_opengl_procedure("wglCreateContextAttribsARB");
+        wglSwapInternalEXT = (WglSwapInternalEXTPtr)win32_load_opengl_procedure("wglSwapInternalEXT");
+        if(wglSwapInternalEXT){
+            wglSwapInternalEXT(1);
+        }
+        
+        I32 attrib_list[]={
             WGL_DRAW_TO_WINDOW_ARB, GL_TRUE,
             WGL_SUPPORT_OPENGL_ARB, GL_TRUE,
             WGL_DOUBLE_BUFFER_ARB, GL_TRUE,
@@ -98,29 +109,23 @@ function B32 win32_init_opengl(HDC device_context){
 #endif
         I32 pixel_format;
         U32 formats_count;
-        if(wglChoosePixelFormatARB(device_context, attrib_list, 0, 1, &pixel_format, &formats_count) != FALSE){
-            wglCreateContextAttribsARB = (WglCreateContextAttribsARBPtr)win32_load_opengl_procedure("wglCreateContextAttribsARB");
-            const I32 create_context_attrib_list[]={
-                WGL_CONTEXT_MAJOR_VERSION_ARB, 3,
-                WGL_CONTEXT_MINOR_VERSION_ARB, 3,
-                WGL_CONTEXT_PROFILE_MASK_ARB, WGL_CONTEXT_COMPATIBILITY_PROFILE_BIT_ARB,
-                0,
-            };
-            global_opengl_rendering_context = wglCreateContextAttribsARB(device_context, dummy_opengl_rendering_context, 
-                                                                         create_context_attrib_list);
-            
-            
-            
-            win32_delete_opengl_context(device_context, dummy_opengl_rendering_context);
-            wglMakeCurrent(device_context, global_opengl_rendering_context);
-            result = true;
-        }
-        else{
-            //TODO(oleksii): error handling (failed to choose pixel format ARB)
-        }
+        wglChoosePixelFormatARB(device_context, attrib_list, 0, 1, &pixel_format, &formats_count);
+        
+        
+        I32 create_context_attrib_list[]={
+            WGL_CONTEXT_MAJOR_VERSION_ARB, 3,
+            WGL_CONTEXT_MINOR_VERSION_ARB, 3,
+            WGL_CONTEXT_PROFILE_MASK_ARB, WGL_CONTEXT_COMPATIBILITY_PROFILE_BIT_ARB,
+            0,
+        };
+        global_opengl_rendering_context = wglCreateContextAttribsARB(device_context, dummy_opengl_rendering_context, 
+                                                                     create_context_attrib_list);
+        win32_delete_opengl_context(device_context, dummy_opengl_rendering_context);
+        wglMakeCurrent(device_context, global_opengl_rendering_context);
+        result = true;
     }
     else{
-        //TODO(oleksii): error handling (failed to set pixel format for device context)
+        //TODO(oleksii): error handling (failed to create dummy opengl rendering context).
     }
     return(result);
 }

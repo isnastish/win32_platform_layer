@@ -1,4 +1,5 @@
 #include "application.h"
+
 //NOTE(oleksii): Should be replaced with /EXPORT because __declspec(dllexport) is windows-specific thing.
 #define APPAPI extern "C" __declspec(dllexport)
 
