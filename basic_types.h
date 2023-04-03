@@ -1,8 +1,10 @@
 #ifndef BASIC_TYPES_H
 
 #include <stdio.h>
+#include <malloc.h>
 #include <stdint.h>
 #include <assert.h>
+#include <string.h>
 
 #define function static
 #define global static
@@ -52,6 +54,10 @@ inline String8 make_string8(I64 size, char *str){
 
 #define Str8(str) make_string8((sizeof(str) - 1), (str))
 #define Str8Comp(str) {(sizeof(str) - 1), (str)}
+
+inline B32 is_space(U8 c){
+    return(c == ' ');
+}
 
 #define BASIC_TYPES_H
 #endif //BASIC_TYPES_H

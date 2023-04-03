@@ -14,6 +14,8 @@
 //[ ] Implement our own sprintf function with %v2, %v3, %v4, %m2, %m3, %m4 formats (and all the standart formats as well)
 
 #include "win32.h"
+
+#include "opengl.cpp"
 #include "win32_opengl.cpp"
 
 ////////////////////////////////

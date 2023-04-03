@@ -47,7 +47,6 @@ struct Memory{
 };
 
 struct Input{
-    
 };
 
 global PlatformApi *platform;
