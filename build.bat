@@ -10,13 +10,13 @@
 ::-O2      create fast code
 
 set compile_options=-Zi -nologo -FC -DINTERNAL_BUILD
-set link_options=user32.lib kernel32.lib opengl32.lib gdi32.lib
+set link_options=user32.lib kernel32.lib opengl32.lib gdi32.lib shlwapi.lib
 
-if not exist ..\..\build (mkdir ..\..\build)
-pushd ..\..\build
+if not exist build (mkdir build)
+pushd build
 ::Build application dll
-cl %compile_options% ..\win32_platform_layer\code\application.cpp /LD /link opengl32.lib
+cl %compile_options% -Fe:app.dll ..\application.cpp /LD /link opengl32.lib
 
 ::Build (win32) platform layer
-cl %compile_options% -Fe:PlatformLayer.exe ..\win32_platform_layer\code\win32.cpp /link %link_options%
+cl %compile_options% -Fe:PlatformLayer.exe ..\win32.cpp /link %link_options%
 popd

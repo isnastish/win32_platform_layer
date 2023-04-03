@@ -113,9 +113,11 @@ function B32 win32_init_opengl(HDC device_context){
                 OutputDebugStringA((LPCSTR)ext);
                 OutputDebugStringA((LPCSTR)"\n");
 #endif
+#if 0
                 if(strncmp((char *)ext, "GL_ARB_framebuffer_sRGB", ext_length) == 0){
-                    debug_break();
+                    //debug_break();
                 }
+#endif
             }
         }
         

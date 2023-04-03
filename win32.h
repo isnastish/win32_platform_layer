@@ -36,6 +36,7 @@
 #include <windows.h>
 #include <xinput.h>
 #include <gl/gl.h>
+#include <shlwapi.h>
 
 #define debug_break() __debugbreak();
 

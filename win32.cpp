@@ -12,6 +12,7 @@
 //        OpenglInfo struct and gl_get_info() procedure.
 //[ ] Finish loading app_code as a dll. Implement live code editing. use FILETIME? GetFileTime, SetFileTime.
 //[ ] Implement our own sprintf function with %v2, %v3, %v4, %m2, %m3, %m4 formats (and all the standart formats as well)
+//[ ] Compute the full path to .dll. Maybe retrieve somehow current working directory.
 
 #include "win32.h"
 
@@ -225,7 +226,21 @@ int WINAPI WinMain(HINSTANCE instance, HINSTANCE prev_instance, PSTR cmd_line, i
     platform.free_memory = win32_free_memory;
     
     win32_init_xinput();
-    win32_load_app_code(&global_app_code, "e:/work/build/application.dll");
+    
+    //TODO(alexey): We have to get the full path to the dll somehow
+    char working_dir[1024] = {};
+    U32 size = GetCurrentDirectory(sizeof(working_dir), working_dir);
+    working_dir[size] = 0;
+    String8 app_dll = Str8("\\app.dll");
+    strncat(working_dir, app_dll.data, app_dll.size);
+    working_dir[size + app_dll.size] = 0;
+    OutputDebugStringA((LPCSTR)working_dir);
+    if(PathFileExistsA((LPCSTR)working_dir) == TRUE){
+        win32_load_app_code(&global_app_code, working_dir);
+    }
+    else{
+        //TODO(alexey): Error handling, file doesn't exist.
+    }
     
     WNDCLASSA window_class = {};
     window_class.style = CS_OWNDC | CS_HREDRAW | CS_VREDRAW;
