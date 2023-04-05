@@ -97,7 +97,15 @@ function B32 win32_init_opengl(HDC device_context){
         //TODO(oleksii): Avoid memory allocation somehow!
         //TODO(oleksii): Write a parser, which will parse an extension string and return all the extensions
         //one by one.
-        OpenglInfo opengl_info = gl_get_info();
+        OpenglInfo opengl_info = opengl_get_info();
+        OpenglExtensions opengl_extensions = opengl_parse_extensions(opengl_info.extensions);
+        if(opengl_extensions.gl_arb_framebuffer_srgb){
+            glEnable(GL_FRAMEBUFFER_SRGB);
+        }
+        if(opengl_extensions.gl_ext_texture_srgb_decode){
+            glEnable(GL_SRGB8_ALPHA8);
+        }
+#if 0
         U8 *start, *end;
         start = end = opengl_info.extensions;
         for(I32 index = 0;
@@ -113,14 +121,18 @@ function B32 win32_init_opengl(HDC device_context){
                 OutputDebugStringA((LPCSTR)ext);
                 OutputDebugStringA((LPCSTR)"\n");
 #endif
-#if 0
                 if(strncmp((char *)ext, "GL_ARB_framebuffer_sRGB", ext_length) == 0){
-                    //debug_break();
+                    glEnable(GL_FRAMEBUFFER_SRGB);
+                    debug_break();
                 }
-#endif
+                
+                if(strncmp((char *)ext, "EXT_texture_sRGB_decode", ext_length) == 0){
+                    debug_break();
+                    //glEnable();
+                }
             }
         }
-        
+#endif
         I32 pixel_format;
         U32 formats_count;
         wglChoosePixelFormatARB(device_context, global_choose_pixel_format_attrib_list, 0, 1, &pixel_format, &formats_count);

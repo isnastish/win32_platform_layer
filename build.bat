@@ -18,5 +18,5 @@ pushd build
 cl %compile_options% -Fe:app.dll ..\application.cpp /LD /link opengl32.lib
 
 ::Build (win32) platform layer
-cl %compile_options% -Fe:PlatformLayer.exe ..\win32.cpp /link %link_options%
+cl %compile_options% -Fe:win32_app_layer.exe ..\win32.cpp /link %link_options%
 popd

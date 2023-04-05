@@ -5,7 +5,7 @@
 //[x] Create functions for memory allocation/deallocation so we can call them in the application
 //    (in case we need some additional memory)
 //[x] Init OpenGL, load opengl procedures
-//    [ ] Move platform-specific opengl code (wgl) to its own file.
+//    [x] Move platform-specific opengl code (wgl) to its own file.
 //    [ ] Experiment with opengl extensions to understand them better.
 //    [ ] Learn about Vsync and get it to work, I'm assuming using wglSwapIntervalsEXT function?
 //    [ ] Move platform-independent opengl code in win32.h somewhere else, because it shouldn't really be there.
@@ -13,6 +13,8 @@
 //[ ] Finish loading app_code as a dll. Implement live code editing. use FILETIME? GetFileTime, SetFileTime.
 //[ ] Implement our own sprintf function with %v2, %v3, %v4, %m2, %m3, %m4 formats (and all the standart formats as well)
 //[ ] Compute the full path to .dll. Maybe retrieve somehow current working directory.
+//[ ] Pack gamepad input into some struct and pass to app_update_and_render()
+//[ ] Mouse/keyboard input (maybe raw input in as well, just to be familiar with it)
 
 #include "win32.h"
 
