@@ -98,7 +98,7 @@ function B32 win32_init_opengl(HDC device_context){
         //TODO(oleksii): Write a parser, which will parse an extension string and return all the extensions
         //one by one.
         OpenglInfo opengl_info = opengl_get_info();
-        OpenglExtensions opengl_extensions = opengl_parse_extensions(opengl_info.extensions);
+        OpenglExtensions opengl_extensions = opengl_get_extensions(opengl_info.extensions);
         if(opengl_extensions.gl_arb_framebuffer_srgb){
             glEnable(GL_FRAMEBUFFER_SRGB);
         }

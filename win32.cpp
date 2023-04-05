@@ -15,6 +15,9 @@
 //[ ] Compute the full path to .dll. Maybe retrieve somehow current working directory.
 //[ ] Pack gamepad input into some struct and pass to app_update_and_render()
 //[ ] Mouse/keyboard input (maybe raw input in as well, just to be familiar with it)
+//[ ] Understand how to create projects in 4coder. The goal is to specify the directory to the source files
+//    so they can be loaded automatically.
+//[ ] Implement my own version of strncpy for U8 type. Currently it's used in oepngl.cpp while parsing extensions
 
 #include "win32.h"
 

@@ -16,6 +16,10 @@
 #define Megabytes(n) ((n)*(1024ull)*(1024ull))
 #define Kilobytes(n) ((n)*(1024ull))
 
+//TODO(alexey): Once we have our own strncpy/cmp we can remove these macros.
+#define strncpy_u8(dest, src, size) strncpy((char *)(dest), (const char *)(src), (size_t)(size))
+#define strncmp_u8(s1, s2, count) strncmp((const char *)(s1), (const char *)(s2), (size_t)(count))
+
 typedef int8_t I8;
 typedef int16_t I16;
 typedef int32_t I32;
@@ -54,6 +58,10 @@ inline String8 make_string8(I64 size, char *str){
 
 #define Str8(str) make_string8((sizeof(str) - 1), (str))
 #define Str8Comp(str) {(sizeof(str) - 1), (str)}
+
+inline B32 is_white_space(U8 c){
+    //TODO(alexey): Not implemented yet.
+}
 
 inline B32 is_space(U8 c){
     return(c == ' ');
