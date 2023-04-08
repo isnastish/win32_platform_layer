@@ -112,11 +112,10 @@ function B32 win32_init_opengl(HDC device_context){
             OutputDebugStringA((LPCSTR)debug_buf);
         }
 #endif
-        OpenglExtensions opengl_extensions = opengl_get_extensions(opengl_info.extensions);
-        if(opengl_extensions.gl_arb_framebuffer_srgb){
+        if(opengl_info.gl_arb_framebuffer_srgb){
             glEnable(GL_FRAMEBUFFER_SRGB);
         }
-        if(opengl_extensions.gl_ext_texture_srgb_decode){
+        if(opengl_info.gl_ext_texture_srgb_decode){
             glEnable(GL_SRGB8_ALPHA8);
         }
         

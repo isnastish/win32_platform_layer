@@ -49,7 +49,10 @@ inline function V2 v2(F32 x=0.0f, F32 y=0.0f){
 
 struct String8{
     I64 size;
-    char *data;
+    union{
+        char *data;
+        U8 *data_u8;
+    };
 };
 
 inline String8 make_string8(I64 size, char *str){
@@ -60,12 +63,54 @@ inline String8 make_string8(I64 size, char *str){
 #define Str8(str) make_string8((sizeof(str) - 1), (str))
 #define Str8Comp(str) {(sizeof(str) - 1), (str)}
 
-inline B32 is_white_space(U8 c){
-    //TODO(alexey): Not implemented yet.
-}
-
 inline B32 is_space(U8 c){
     return(c == ' ');
+}
+
+inline B32 strings_equal(char *a, char *b){
+    B32 result = (a == b);
+    while((*a == *b) && (*a && *b)){
+        ++a;
+        ++b;
+    }
+    result = ((*a == *b) && (!*a));
+    return(result);
+}
+
+inline B32 strings_equal(I64 a_len, char *a, I64 b_len, char *b){
+    B32 result = (a_len == b_len);
+    if(result){
+        I32 count = 0;
+        while((*a++ == *b++) && (count < a_len)){
+            ++count;
+        }
+        result = (count == a_len);
+    }
+    return(result);
+}
+
+inline B32 strings_equal(I64 a_len, U8 *a, I64 b_len, U8 *b){
+    return(strings_equal(a_len, (char *)a, b_len, (char *)b));
+}
+
+inline B32 strings_equal(String8 a, String8 b){
+    return(strings_equal(a.size, (char *)a.data, b.size, (char *)b.data));
+}
+
+inline B32 strings_equal(U8 *a, U8 *b){
+    return(strings_equal((char *)a, (char *)b));
+}
+
+inline char *string_copy(char *dst, char *src, I64 count){
+    I32 index = 0;
+    while(index < count){
+        dst[index] = *src;
+    }
+    return(dst);
+}
+
+inline U8 *string_copy(U8 *dst, U8 *src, I64 count){
+    return((U8 *)string_copy((char *)dst, (char *)src, count));
 }
 
 #define BASIC_TYPES_H
