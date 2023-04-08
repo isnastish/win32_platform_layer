@@ -19,6 +19,7 @@
 //TODO(alexey): Once we have our own strncpy/cmp we can remove these macros.
 #define strncpy_u8(dest, src, size) strncpy((char *)(dest), (const char *)(src), (size_t)(size))
 #define strncmp_u8(s1, s2, count) strncmp((const char *)(s1), (const char *)(s2), (size_t)(count))
+#define sprintf_s_u8(buf, size, fmt, ...) sprintf_s((char *)buf, size, (const char *)(fmt), ## __VA_ARGS__)
 
 typedef int8_t I8;
 typedef int16_t I16;

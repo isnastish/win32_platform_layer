@@ -91,13 +91,27 @@ function B32 win32_init_opengl(HDC device_context){
     if(dummy_opengl_rendering_context){
         wglMakeCurrent(device_context, dummy_opengl_rendering_context);
         win32_load_wgl_procedures();
-        //TODO(oleksii): Learn what this function does!!!
         wglSwapIntervalEXT(1);
-        
-        //TODO(oleksii): Avoid memory allocation somehow!
-        //TODO(oleksii): Write a parser, which will parse an extension string and return all the extensions
-        //one by one.
         OpenglInfo opengl_info = opengl_get_info();
+#if INTERNAL_BUILD
+        {
+            U8 debug_buf[1 << 14];
+            U8 *fmt =
+            (U8 *)"OpenGL Info\n"
+                "vendor: %s\n"
+                "renderer: %s\n"
+                "version: %s\n"
+                "glsl version: %s\n"
+                "extensions: %s\n";
+            sprintf_s_u8(debug_buf, sizeof(debug_buf), fmt, 
+                         opengl_info.vendor,
+                         opengl_info.renderer,
+                         opengl_info.version,
+                         opengl_info.shading_language_version,
+                         opengl_info.extensions);
+            OutputDebugStringA((LPCSTR)debug_buf);
+        }
+#endif
         OpenglExtensions opengl_extensions = opengl_get_extensions(opengl_info.extensions);
         if(opengl_extensions.gl_arb_framebuffer_srgb){
             glEnable(GL_FRAMEBUFFER_SRGB);
@@ -105,38 +119,11 @@ function B32 win32_init_opengl(HDC device_context){
         if(opengl_extensions.gl_ext_texture_srgb_decode){
             glEnable(GL_SRGB8_ALPHA8);
         }
-#if 0
-        U8 *start, *end;
-        start = end = opengl_info.extensions;
-        for(I32 index = 0;
-            *(opengl_info.extensions + index) != '\0';
-            ++index, ++end){
-            if(is_space(*(opengl_info.extensions + index))){
-                U32 ext_length = (end - start);
-                U8 *ext = (U8 *)malloc(ext_length + 1);
-                memcpy(ext, start, ext_length);
-                ext[ext_length] = 0;
-                start = (end + 1);
-#if INTERNAL_BUILD
-                OutputDebugStringA((LPCSTR)ext);
-                OutputDebugStringA((LPCSTR)"\n");
-#endif
-                if(strncmp((char *)ext, "GL_ARB_framebuffer_sRGB", ext_length) == 0){
-                    glEnable(GL_FRAMEBUFFER_SRGB);
-                    debug_break();
-                }
-                
-                if(strncmp((char *)ext, "EXT_texture_sRGB_decode", ext_length) == 0){
-                    debug_break();
-                    //glEnable();
-                }
-            }
-        }
-#endif
+        
         I32 pixel_format;
         U32 formats_count;
         wglChoosePixelFormatARB(device_context, global_choose_pixel_format_attrib_list, 0, 1, &pixel_format, &formats_count);
-        global_opengl_rendering_context = wglCreateContextAttribsARB(device_context, dummy_opengl_rendering_context, 
+        global_opengl_rendering_context = wglCreateContextAttribsARB(device_context, dummy_opengl_rendering_context,
                                                                      global_create_context_attrib_list);
         win32_delete_opengl_context(device_context, dummy_opengl_rendering_context);
         wglMakeCurrent(device_context, global_opengl_rendering_context);

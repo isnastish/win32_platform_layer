@@ -19,12 +19,14 @@ struct OpenglInfo{
     U8 *extensions;
 };
 
-global String8 opengl_extension_names[]={
-    Str8("GL_ARB_framebuffer_sRGB"),
-};
+//OpenGL extension names to query for:
+global String8 opengl_arb_framebuffer_srgb_extension = Str8("GL_ARB_framebuffer_sRGB");
+global String8 opengl_ext_texture_srgb_decode_extension = Str8("GL_EXT_texture_sRGB_decode");
+global String8 opengl_arb_vertex_attrib_binding_extension = Str8("GL_ARB_vertex_attrib_binding");
+global String8 opengl_arb_vertex_buffer_object_extension = Str8("GL_ARB_vertex_buffer_object");
+global String8 opengl_arb_vertex_program_extension = Str8("GL_ARB_vertex_program");
+global String8 opengl_arb_vertex_shader_extension = Str8("GL_ARB_vertex_shader");
 
-//NOTE(alexey): Only works when extensions are separated with a single space.
-//Probably I have to implement a more robust parser.
 function OpenglExtensions opengl_get_extensions(U8 *extensions){
     OpenglExtensions result = {};
     U8 *start, *end;
@@ -38,27 +40,43 @@ function OpenglExtensions opengl_get_extensions(U8 *extensions){
             assert(ext_len <= sizeof(ext_buf));
             strncpy_u8(ext_buf, start, ext_len);
             ext_buf[ext_len] = 0;
-            //TODO(alexey): Collapse it into the function
-            if(!strncmp_u8(ext_buf, "GL_ARB_framebuffer_sRGB", sizeof("GL_ARB_framebuffer_sRGB"))){
+#if INTERNAL_BUILD
+            {
+                U8 debug_buf[512];
+                sprintf_s_u8(debug_buf, sizeof(debug_buf), "Ext: %s\n", ext_buf);
+                OutputDebugStringA((LPCSTR)debug_buf);
+            }
+#endif
+            if(!strncmp_u8(ext_buf, 
+                           opengl_arb_framebuffer_srgb_extension.data,
+                           opengl_arb_framebuffer_srgb_extension.size)){
                 result.gl_arb_framebuffer_srgb = true;
             }
-            if(!strncmp_u8(ext_buf, "GL_EXT_texture_sRGB_decode", sizeof("GL_EXT_texture_sRGB_decode"))){
+            else if(!strncmp_u8(ext_buf, 
+                                opengl_ext_texture_srgb_decode_extension.data, 
+                                opengl_ext_texture_srgb_decode_extension.size)){
                 result.gl_ext_texture_srgb_decode = true;
             }
-            if(!strncmp_u8(ext_buf, "GL_ARB_vertex_attrib_binding", sizeof("GL_ARB_vertex_attrib_binding"))){
+            else if(!strncmp_u8(ext_buf, 
+                                opengl_arb_vertex_attrib_binding_extension.data, 
+                                opengl_arb_vertex_attrib_binding_extension.size)){
                 result.gl_arb_vertex_attrib_binding = true;
             }
-            if(!strncmp_u8(ext_buf, "GL_ARB_vertex_buffer_object", sizeof("gl_arb_vertex_buffer_object"))){
+            else if(!strncmp_u8(ext_buf, 
+                                opengl_arb_vertex_buffer_object_extension.data, 
+                                opengl_arb_vertex_buffer_object_extension.size)){
                 result.gl_arb_vertex_buffer_object = true;
             }
-            if(!strncmp_u8(ext_buf, "GL_ARB_vertex_program", sizeof("GL_ARB_vertex_program"))){
+            else if(!strncmp_u8(ext_buf, 
+                                opengl_arb_vertex_program_extension.data, 
+                                opengl_arb_vertex_program_extension.size)){
                 result.gl_arb_vertex_program = true;
             }
-            if(!strncmp_u8(ext_buf, "GL_ARB_vertex_shader", sizeof("GL_ARB_vertex_shader"))){
+            else if(!strncmp_u8(ext_buf, 
+                                opengl_arb_vertex_shader_extension.data, 
+                                opengl_arb_vertex_shader_extension.size)){
                 result.gl_arb_vertex_shader = true;
             }
-            
-            //skip the space
             start = (end + 1);
         }
     }
