@@ -19,6 +19,8 @@
 //    so they can be loaded automatically.
 //[ ] Implement my own version of strncpy for U8 type. Currently it's used in oepngl.cpp while parsing extensions
 
+//[ ] my_sprintf(), support only %s format for now.
+
 #include "win32.h"
 
 #include "opengl.cpp"
@@ -236,7 +238,7 @@ int WINAPI WinMain(HINSTANCE instance, HINSTANCE prev_instance, PSTR cmd_line, i
     char working_dir[1024] = {};
     U32 size = GetCurrentDirectory(sizeof(working_dir), working_dir);
     working_dir[size] = 0;
-    String8 app_dll = Str8("\\app.dll");
+    Str8 app_dll = str8("\\app.dll");
     strncat(working_dir, app_dll.data, app_dll.size);
     working_dir[size + app_dll.size] = 0;
     OutputDebugStringA((LPCSTR)working_dir);

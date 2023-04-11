@@ -88,39 +88,14 @@ function B32 win32_init_opengl(HDC device_context){
                         sizeof(PIXELFORMATDESCRIPTOR), &suggested_pfd);
     SetPixelFormat(device_context, pixel_format_index, &suggested_pfd);
     HGLRC dummy_opengl_rendering_context = wglCreateContext(device_context);
+    
+    I32 pixel_format;
+    U32 formats_count;
     if(dummy_opengl_rendering_context){
         wglMakeCurrent(device_context, dummy_opengl_rendering_context);
         win32_load_wgl_procedures();
         wglSwapIntervalEXT(1);
-        OpenglInfo opengl_info = opengl_get_info();
-#if INTERNAL_BUILD
-        {
-            U8 debug_buf[1 << 14];
-            U8 *fmt =
-            (U8 *)"OpenGL Info\n"
-                "vendor: %s\n"
-                "renderer: %s\n"
-                "version: %s\n"
-                "glsl version: %s\n"
-                "extensions: %s\n";
-            sprintf_s_u8(debug_buf, sizeof(debug_buf), fmt, 
-                         opengl_info.vendor,
-                         opengl_info.renderer,
-                         opengl_info.version,
-                         opengl_info.shading_language_version,
-                         opengl_info.extensions);
-            OutputDebugStringA((LPCSTR)debug_buf);
-        }
-#endif
-        if(opengl_info.gl_arb_framebuffer_srgb){
-            glEnable(GL_FRAMEBUFFER_SRGB);
-        }
-        if(opengl_info.gl_ext_texture_srgb_decode){
-            glEnable(GL_SRGB8_ALPHA8);
-        }
-        
-        I32 pixel_format;
-        U32 formats_count;
+        opengl_init();
         wglChoosePixelFormatARB(device_context, global_choose_pixel_format_attrib_list, 0, 1, &pixel_format, &formats_count);
         global_opengl_rendering_context = wglCreateContextAttribsARB(device_context, dummy_opengl_rendering_context,
                                                                      global_create_context_attrib_list);

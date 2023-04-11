@@ -5,6 +5,12 @@
 #include <stdint.h>
 #include <assert.h>
 #include <string.h>
+#include <stdarg.h>
+
+#undef assert
+#define assert(expr) if(!(expr)){ *((int *)0) = 0xff; }else{}
+
+#define size_of(array) (sizeof(array) / sizeof((array)[0]))
 
 #define function static
 #define global static
@@ -35,6 +41,10 @@ typedef double F64;
 
 typedef I32 B32;
 
+typedef size_t MemIndex;
+
+typedef uintptr_t Umm;
+
 union V2{
     struct{
         F32 x, y;
@@ -47,21 +57,18 @@ inline function V2 v2(F32 x=0.0f, F32 y=0.0f){
     return(result);
 }
 
-struct String8{
+struct Str8{
     I64 size;
-    union{
-        char *data;
-        U8 *data_u8;
-    };
+    char *data;
 };
 
-inline String8 make_string8(I64 size, char *str){
-    String8 result = {size, str};
+inline Str8 make_str8(I64 size, char *str){
+    Str8 result = {size, str};
     return(result);
 }
 
-#define Str8(str) make_string8((sizeof(str) - 1), (str))
-#define Str8Comp(str) {(sizeof(str) - 1), (str)}
+#define str8(str) make_str8((sizeof(str) - 1), (str))
+#define str8_comp(str) {(sizeof(str) - 1), (str)}
 
 inline B32 is_space(U8 c){
     return(c == ' ');
@@ -77,40 +84,29 @@ inline B32 strings_equal(char *a, char *b){
     return(result);
 }
 
-inline B32 strings_equal(I64 a_len, char *a, I64 b_len, char *b){
-    B32 result = (a_len == b_len);
+inline B32 strings_equal(MemIndex len_a, char *a, MemIndex len_b, char *b){
+    B32 result = (len_a == len_b);
     if(result){
         I32 count = 0;
-        while((*a++ == *b++) && (count < a_len)){
+        while((*a++ == *b++) && (count < len_a)){
             ++count;
         }
-        result = (count == a_len);
+        result = (count == len_a);
     }
     return(result);
 }
 
-inline B32 strings_equal(I64 a_len, U8 *a, I64 b_len, U8 *b){
-    return(strings_equal(a_len, (char *)a, b_len, (char *)b));
+inline B32 strings_equal(Str8 a, Str8 b){
+    return(strings_equal(a.size, a.data, b.size, b.data));
 }
 
-inline B32 strings_equal(String8 a, String8 b){
-    return(strings_equal(a.size, (char *)a.data, b.size, (char *)b.data));
-}
-
-inline B32 strings_equal(U8 *a, U8 *b){
-    return(strings_equal((char *)a, (char *)b));
-}
-
-inline char *string_copy(char *dst, char *src, I64 count){
-    I32 index = 0;
-    while(index < count){
-        dst[index] = *src;
+//TODO(alexey): Think about better naming
+inline char *my_sprintf(char *buf, MemIndex buf_size, char *fmt, ...){
+    va_list args_list;
+    va_start(args_list, fmt);
+    for(;;){
     }
-    return(dst);
-}
-
-inline U8 *string_copy(U8 *dst, U8 *src, I64 count){
-    return((U8 *)string_copy((char *)dst, (char *)src, count));
+    va_end(args_list);
 }
 
 #define BASIC_TYPES_H
