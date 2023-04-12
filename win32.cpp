@@ -17,9 +17,11 @@
 //[ ] Mouse/keyboard input (maybe raw input in as well, just to be familiar with it)
 //[ ] Understand how to create projects in 4coder. The goal is to specify the directory to the source files
 //    so they can be loaded automatically.
-//[ ] Implement my own version of strncpy for U8 type. Currently it's used in oepngl.cpp while parsing extensions
-
-//[ ] my_sprintf(), support only %s format for now.
+//[x] Implement my own version of strncpy. Currently it's used in oepngl.cpp while parsing extensions
+//[x] my_sprintf(), support only %s format for now.
+//[ ] Think about better name for my_sprintf function.
+//[ ] string_concat(char *dest, const char *source)
+//    [ ] string_concat(char *dest, const char *source, MemIndex source_count)
 
 #include "win32.h"
 
@@ -213,6 +215,23 @@ LRESULT CALLBACK win32_main_window_procedure(HWND window, UINT message, WPARAM w
         case WM_SIZE:{
             V2 window_client_size = win32_get_window_client_size(window);
         }break;
+        
+        case WM_SYSKEYDOWN:{
+            //bit 31, the value is always 0 for WM_SYSKEYDOWN
+            U32 transition_state = !!(w_param << 31);
+            char debug_buf[64];
+            my_sprintf(debug_buf, size_of(debug_buf), "transition_state: %u\n", transition_state);
+            OutputDebugStringA((LPCSTR)debug_buf);
+        }break;
+        case WM_SYSKEYUP:{
+            //bit 31, the value is always 1 for WM_SYSKEYUP
+        }break;
+        case WM_KEYUP:{
+        }break;
+        case WM_KEYDOWN:{
+        }break;
+        
+        //toggle fullscreen mode using left mouse button.
         case WM_LBUTTONDOWN:{
             win32_switch_fullscreen(window);
         }break;

@@ -36,8 +36,7 @@ function OpenglInfo opengl_get_info(){
             U32 ext_len = (end - start);
             char ext[256];
             assert(ext_len <= size_of(ext));
-            //TODO(alexey): Replace strncpy with string_copy, but the funciton is not implemented yet.
-            strncpy(ext, start, ext_len);
+            string_copy(ext, start, ext_len);
             if(strings_equal(ext_len, ext, 
                              result.gl_arb_framebuffer_srgb.name.size, 
                              result.gl_arb_framebuffer_srgb.name.data)){
@@ -58,20 +57,22 @@ function void opengl_init(){
     OpenglInfo opengl_info = opengl_get_info();
 #if INTERNAL_BUILD
     {
-        U8 debug_buf[1 << 14];
-        U8 *fmt =
-        (U8 *)"OpenGL Info\n"
+        char debug_buf[1 << 14];
+        char *fmt =
+            "OpenGL Info\n"
             "vendor: %s\n"
             "renderer: %s\n"
             "version: %s\n"
             "glsl version: %s\n"
             "extensions: %s\n";
-        sprintf_s_u8(debug_buf, sizeof(debug_buf), fmt, 
-                     opengl_info.vendor,
-                     opengl_info.renderer,
-                     opengl_info.version,
-                     opengl_info.shading_language_version,
-                     opengl_info.extensions);
+        my_sprintf(debug_buf,
+                   size_of(debug_buf),
+                   fmt,
+                   opengl_info.vendor,
+                   opengl_info.renderer,
+                   opengl_info.version,
+                   opengl_info.shading_language_version,
+                   opengl_info.extensions);
         OutputDebugStringA((LPCSTR)debug_buf);
     }
 #endif
