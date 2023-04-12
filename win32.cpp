@@ -205,7 +205,7 @@ function V2 win32_get_window_size(HWND window){
     return(result);
 }
 
-LRESULT CALLBACK win32_main_window_procedure(HWND window, UINT message, WPARAM w_param, LPARAM l_param){ 
+LRESULT CALLBACK win32_main_window_procedure(HWND window, UINT message, WPARAM wparam, LPARAM lparam){ 
     LRESULT result = 0;
     switch(message){
         case WM_CLOSE:
@@ -216,19 +216,22 @@ LRESULT CALLBACK win32_main_window_procedure(HWND window, UINT message, WPARAM w
             V2 window_client_size = win32_get_window_client_size(window);
         }break;
         
-        case WM_SYSKEYDOWN:{
-            //bit 31, the value is always 0 for WM_SYSKEYDOWN
-            U32 transition_state = !!(w_param << 31);
-            char debug_buf[64];
-            my_sprintf(debug_buf, size_of(debug_buf), "transition_state: %u\n", transition_state);
-            OutputDebugStringA((LPCSTR)debug_buf);
-        }break;
-        case WM_SYSKEYUP:{
-            //bit 31, the value is always 1 for WM_SYSKEYUP
-        }break;
-        case WM_KEYUP:{
-        }break;
+        case WM_SYSKEYDOWN:
+        case WM_SYSKEYUP:
+        case WM_KEYUP:
         case WM_KEYDOWN:{
+            //bit 30, previous key state. The value is 1 if the key is down, 0 if up (before the message is sent)
+            U32 was_down = !!(lparam & (1 << 30));
+            
+            //bit 31, the value is always 0 for WM_SYSKEYDOWN
+            //bit 31, the value is always 1 for WM_SYSKEYUP
+            U32 is_down = !!(lparam & (1 << 31));
+            if(is_down){
+                OutputDebugStringA("WM_KEYUP or WM_SYSKEYUP\n");
+            }
+            else{
+                OutputDebugStringA("WM_KEYDOWN or WM_SYSKEYDOWN\n");
+            }
         }break;
         
         //toggle fullscreen mode using left mouse button.
@@ -237,7 +240,7 @@ LRESULT CALLBACK win32_main_window_procedure(HWND window, UINT message, WPARAM w
         }break;
         
         default:{
-            result = DefWindowProc(window, message, w_param, l_param);
+            result = DefWindowProc(window, message, wparam, lparam);
         }
     } 
     return(result); 
