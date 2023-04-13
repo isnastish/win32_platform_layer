@@ -10,7 +10,7 @@
 ::-O2      create fast code
 
 set compile_options=-Zi -nologo -FC -DINTERNAL_BUILD
-set link_options=user32.lib kernel32.lib opengl32.lib gdi32.lib shlwapi.lib
+set link_options=user32.lib kernel32.lib opengl32.lib gdi32.lib shlwapi.lib ole32.lib
 
 if not exist build (mkdir build)
 pushd build

@@ -46,7 +46,32 @@ struct Memory{
     PlatformApi *platform;
 };
 
+struct Button{
+    B32 was_down;
+    B32 is_down;
+};
+
+struct Gamepad{
+    Button up;
+    Button down;
+    Button left;
+    Button right;
+    Button a_button;
+    Button b_button;
+    Button x_button;
+    Button y_button;
+    Button back;
+    Button start;
+    Button l_shoulder;
+    Button r_shoulder;
+    V2 l_stick;
+    V2 r_stick;
+    V2 trigger;
+};
+
+#define GAMEPADS_MAX_COUNT 8u
 struct Input{
+    Gamepad gamepads[GAMEPADS_MAX_COUNT];
 };
 
 global PlatformApi *platform;

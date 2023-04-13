@@ -152,7 +152,7 @@ inline char *my_sprintf(char *buf, MemIndex buf_size, char *fmt, ...){
     assert(buf_size > fmt_len);
     I32 pos = 0;
     for(char *at = fmt;
-        *at; 
+        *at;
         at += 1){
         if(*at != '%'){
             buf[pos++] = *at;
@@ -186,15 +186,21 @@ inline char *my_sprintf(char *buf, MemIndex buf_size, char *fmt, ...){
             }break;
             case 'u':{
                 //TODO(alexey): Collapse into a function!!!
+                //And simplify this thing as well.
                 U64 value = va_arg(args_list, U32);
-                I32 index = 0;
-                char value_inv[256] = {};
-                while(value){
-                    value_inv[index++] = (char)('0' + (value % 10));
-                    value /= 10;
+                if(value){
+                    I32 index = 0;
+                    char value_inv[256] = {};
+                    while(value){
+                        value_inv[index++] = (char)('0' + (value % 10));
+                        value /= 10;
+                    }
+                    while(index){
+                        buf[pos++] = value_inv[--index];
+                    }
                 }
-                while(index){
-                    buf[pos++] = value_inv[--index];
+                else{
+                    buf[pos++] = '0';
                 }
             }break;
             default:{

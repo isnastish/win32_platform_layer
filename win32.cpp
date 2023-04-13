@@ -215,25 +215,40 @@ LRESULT CALLBACK win32_main_window_procedure(HWND window, UINT message, WPARAM w
         case WM_SIZE:{
             V2 window_client_size = win32_get_window_client_size(window);
         }break;
-        
         case WM_SYSKEYDOWN:
         case WM_SYSKEYUP:
         case WM_KEYUP:
         case WM_KEYDOWN:{
-            //bit 30, previous key state. The value is 1 if the key is down, 0 if up (before the message is sent)
-            U32 was_down = !!(lparam & (1 << 30));
-            
-            //bit 31, the value is always 0 for WM_SYSKEYDOWN
-            //bit 31, the value is always 1 for WM_SYSKEYUP
-            U32 is_down = !!(lparam & (1 << 31));
-            if(is_down){
-                OutputDebugStringA("WM_KEYUP or WM_SYSKEYUP\n");
-            }
-            else{
-                OutputDebugStringA("WM_KEYDOWN or WM_SYSKEYDOWN\n");
+            B32 was_down = ((lparam & (1 << 30)) != 0);
+            B32 is_down = ((lparam & (1 << 31)) == 0);
+            U32 vk_code = wparam;
+            if(was_down != is_down){
+                char buf[256];
+                //TODO(alexey): Introduce a map between
+                if(vk_code == VK_SPACE){
+                    my_sprintf(buf, size_of(buf), "was_down: %i\nis_down: %u\nSpace down\n\n", was_down, is_down);
+                }
+                else if(vk_code == 'A'){
+                    my_sprintf(buf, size_of(buf), "was_down: %i\nis_down: %u\n'A' down\n\n", was_down, is_down);
+                }
+                else if(vk_code == 'W'){
+                    my_sprintf(buf, size_of(buf), "was_down: %i\nis_down: %u\n'W' down\n\n", was_down, is_down);
+                }
+                else if(vk_code == 'S'){
+                    my_sprintf(buf, size_of(buf), "was_down: %i\nis_down: %u\n'S' down\n\n", was_down, is_down);
+                }
+                else if(vk_code == 'D'){
+                    my_sprintf(buf, size_of(buf), "was_down: %i\nis_down: %u\n'D' down\n\n", was_down, is_down);
+                }
+                else if(vk_code == 'Q'){
+                    my_sprintf(buf, size_of(buf), "was_down: %i\nis_down: %u\n'Q' down\n\n", was_down, is_down);
+                }
+                else if(vk_code == 'E'){
+                    my_sprintf(buf, size_of(buf), "was_down: %i\nis_down: %u\n'E' down\n\n", was_down, is_down);
+                }
+                debug_out(buf);
             }
         }break;
-        
         //toggle fullscreen mode using left mouse button.
         case WM_LBUTTONDOWN:{
             win32_switch_fullscreen(window);
@@ -242,11 +257,12 @@ LRESULT CALLBACK win32_main_window_procedure(HWND window, UINT message, WPARAM w
         default:{
             result = DefWindowProc(window, message, wparam, lparam);
         }
-    } 
+    }
     return(result); 
 }
 
 int WINAPI WinMain(HINSTANCE instance, HINSTANCE prev_instance, PSTR cmd_line, int show_code){
+    CoInitialize(0);
     PlatformApi platform = {};
     platform.load_entire_file = win32_load_entire_file;
     platform.write_entire_file = win32_write_entire_file;
@@ -394,5 +410,7 @@ int WINAPI WinMain(HINSTANCE instance, HINSTANCE prev_instance, PSTR cmd_line, i
     else{
         //TODO(oleksii): error handling (failed to register window class).
     }
+    CoUninitialize();
+    
     return(0);
 }

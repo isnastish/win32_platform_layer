@@ -3,7 +3,6 @@
 #include "platform.h"
 #define WIN32_LEAN_AND_MEAN
 #define NOGDICAPMASKS //     - CC_*, LC_*, PC_*, CP_*, TC_*, RC_
-#define NOVIRTUALKEYCODES // - VK_*
 #define NOSYSMETRICS //      - SM_*
 #define NOMENUS //           - MF_*
 #define NOICONS //           - IDI_*
@@ -37,8 +36,16 @@
 #include <xinput.h>
 #include <gl/gl.h>
 #include <shlwapi.h>
+#include <objbase.h> //for CoInitialize/CoUninitialize
 
+//NOTE(alexey): Just for debugging.
+#if INTERNAL_BUILD
 #define debug_break() __debugbreak();
+#define debug_out(s) OutputDebugStringA((LPCSTR)(s))
+#else
+#define debug_break()
+#define debug_out(s)
+#endif
 
 #define XINPUT_LEFT_STICK_DEADZONE  7849
 #define XINPUT_RIGHT_STICK_DEADZONE 8689
