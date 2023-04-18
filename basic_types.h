@@ -74,14 +74,38 @@ inline B32 is_space(U8 c){
     return(c == ' ');
 }
 
-inline char *string_copy(char *dest, const char *source){
+inline char *str_concat(char *dest,
+                        const char *source){
+    char *at = dest;
+    while(*at){
+        ++at;
+    }
+    while((*at++ = *source++) != '\0'); //make sure that we do null-terminate the final string
+    return(dest);
+}
+
+inline char *str_concat(char *dest,
+                        const char *source, /*not necessary null-terminated string*/
+                        MemIndex count){
+    char *at = dest;
+    while(*at){
+        ++at;
+    }
+    while(--count){ //have to be carefull here, because it's an unsigned value
+        *at++ = *source++;
+    }
+    return(dest);
+}
+
+
+inline char *str_copy(char *dest, const char *source){
     while((*dest++ = *source++) != 0){
         ;
     }
     return(dest);
 }
 
-inline char *string_copy(char *dest, const char *source, MemIndex count){
+inline char *str_copy(char *dest, const char *source, MemIndex count){
     MemIndex index;
     for(index = 0;
         index < count;
@@ -93,7 +117,7 @@ inline char *string_copy(char *dest, const char *source, MemIndex count){
 }
 
 //TODO(alexey): Should we return I64 or MemIndex type???
-inline I64 string_length(char *str){
+inline I64 str_length(char *str){
     I64 result = 0;
     while(*str){
         ++str;
@@ -102,7 +126,7 @@ inline I64 string_length(char *str){
     return(result);
 }
 
-inline B32 strings_equal(char *a, char *b){
+inline B32 str_equal(char *a, char *b){
     B32 result = (a == b);
     while((*a == *b) && (*a && *b)){
         ++a;
@@ -112,7 +136,7 @@ inline B32 strings_equal(char *a, char *b){
     return(result);
 }
 
-inline B32 strings_equal(MemIndex len_a, char *a, MemIndex len_b, char *b){
+inline B32 str_equal(MemIndex len_a, char *a, MemIndex len_b, char *b){
     B32 result = (len_a == len_b);
     if(result){
         I32 count = 0;
@@ -124,8 +148,8 @@ inline B32 strings_equal(MemIndex len_a, char *a, MemIndex len_b, char *b){
     return(result);
 }
 
-inline B32 strings_equal(Str8 a, Str8 b){
-    return(strings_equal(a.size, a.data, b.size, b.data));
+inline B32 str_equal(Str8 a, Str8 b){
+    return(str_equal(a.size, a.data, b.size, b.data));
 }
 
 inline char *int_to_str(I64 value, char *buf, I32 radix_/*not used*/){
@@ -148,7 +172,7 @@ inline char *uint_to_str(U64 value, char *buf, I32 radix_/*not used*/){
 inline char *my_sprintf(char *buf, MemIndex buf_size, char *fmt, ...){
     va_list args_list;
     va_start(args_list, fmt);
-    I64 fmt_len = string_length(fmt);
+    I64 fmt_len = str_length(fmt);
     assert(buf_size > fmt_len);
     I32 pos = 0;
     for(char *at = fmt;
@@ -162,7 +186,7 @@ inline char *my_sprintf(char *buf, MemIndex buf_size, char *fmt, ...){
         switch(*at){
             case 's':{
                 char *str = va_arg(args_list, char *);
-                I64 str_len = string_length(str);
+                I64 str_len = str_length(str);
                 assert((fmt_len + str_len - 2) < buf_size);
                 for(; *str; str += 1){
                     buf[pos++] =  *str;

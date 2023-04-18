@@ -226,25 +226,25 @@ LRESULT CALLBACK win32_main_window_procedure(HWND window, UINT message, WPARAM w
                 char buf[256];
                 //TODO(alexey): Introduce a map between
                 if(vk_code == VK_SPACE){
-                    my_sprintf(buf, size_of(buf), "was_down: %i\nis_down: %u\nSpace down\n\n", was_down, is_down);
+                    my_sprintf(buf, size_of(buf), "SPACE was_down: %i\nis_down: %u\nSpace down\n\n", was_down, is_down);
                 }
                 else if(vk_code == 'A'){
-                    my_sprintf(buf, size_of(buf), "was_down: %i\nis_down: %u\n'A' down\n\n", was_down, is_down);
+                    my_sprintf(buf, size_of(buf), "A was_down: %i\nis_down: %u\n'A' down\n\n", was_down, is_down);
                 }
                 else if(vk_code == 'W'){
-                    my_sprintf(buf, size_of(buf), "was_down: %i\nis_down: %u\n'W' down\n\n", was_down, is_down);
+                    my_sprintf(buf, size_of(buf), "W was_down: %i\nis_down: %u\n'W' down\n\n", was_down, is_down);
                 }
                 else if(vk_code == 'S'){
-                    my_sprintf(buf, size_of(buf), "was_down: %i\nis_down: %u\n'S' down\n\n", was_down, is_down);
+                    my_sprintf(buf, size_of(buf), "S was_down: %i\nis_down: %u\n'S' down\n\n", was_down, is_down);
                 }
                 else if(vk_code == 'D'){
-                    my_sprintf(buf, size_of(buf), "was_down: %i\nis_down: %u\n'D' down\n\n", was_down, is_down);
+                    my_sprintf(buf, size_of(buf), "D was_down: %i\nis_down: %u\n'D' down\n\n", was_down, is_down);
                 }
                 else if(vk_code == 'Q'){
-                    my_sprintf(buf, size_of(buf), "was_down: %i\nis_down: %u\n'Q' down\n\n", was_down, is_down);
+                    my_sprintf(buf, size_of(buf), "Q was_down: %i\nis_down: %u\n'Q' down\n\n", was_down, is_down);
                 }
                 else if(vk_code == 'E'){
-                    my_sprintf(buf, size_of(buf), "was_down: %i\nis_down: %u\n'E' down\n\n", was_down, is_down);
+                    my_sprintf(buf, size_of(buf), "E was_down: %i\nis_down: %u\n'E' down\n\n", was_down, is_down);
                 }
                 debug_out(buf);
             }
@@ -277,8 +277,19 @@ int WINAPI WinMain(HINSTANCE instance, HINSTANCE prev_instance, PSTR cmd_line, i
     U32 size = GetCurrentDirectory(sizeof(working_dir), working_dir);
     working_dir[size] = 0;
     Str8 app_dll = str8("\\app.dll");
+    str_concat();
+#if 0
     strncat(working_dir, app_dll.data, app_dll.size);
-    working_dir[size + app_dll.size] = 0;
+#else
+    {
+        char *app_dll_name = "\\app.dll";
+        MemIndex app_dll_length = str_length(app_dll_name);
+        str_concat(working_dir, app_dll_name);
+        
+        
+    }
+#endif
+    //working_dir[size + app_dll.size] = 0;
     OutputDebugStringA((LPCSTR)working_dir);
     if(PathFileExistsA((LPCSTR)working_dir) == TRUE){
         win32_load_app_code(&global_app_code, working_dir);
@@ -336,7 +347,7 @@ int WINAPI WinMain(HINSTANCE instance, HINSTANCE prev_instance, PSTR cmd_line, i
                         DispatchMessageA(&msg);
                     }
                     for(I32 controller_index = 0; 
-                        controller_index < XUSER_MAX_COUNT; 
+                        controller_index < XUSER_MAX_COUNT;
                         controller_index += 1){
                         XINPUT_STATE controller_state = {};
                         memset(&controller_state, 0, sizeof(XINPUT_STATE));

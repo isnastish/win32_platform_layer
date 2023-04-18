@@ -51,19 +51,25 @@ struct Button{
     B32 is_down;
 };
 
+#define GAMEPAD_BUTTONS_COUNT 12u
 struct Gamepad{
-    Button up;
-    Button down;
-    Button left;
-    Button right;
-    Button a_button;
-    Button b_button;
-    Button x_button;
-    Button y_button;
-    Button back;
-    Button start;
-    Button l_shoulder;
-    Button r_shoulder;
+    union{
+        struct{
+            Button up;
+            Button down;
+            Button left;
+            Button right;
+            Button a_button;
+            Button b_button;
+            Button x_button;
+            Button y_button;
+            Button back;
+            Button start;
+            Button l_shoulder;
+            Button r_shoulder;
+        };
+        Button buttons[GAMEPAD_BUTTONS_COUNT];
+    };
     V2 l_stick;
     V2 r_stick;
     V2 trigger;

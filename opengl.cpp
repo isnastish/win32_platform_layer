@@ -36,15 +36,15 @@ function OpenglInfo opengl_get_info(){
             U32 ext_len = (end - start);
             char ext[256];
             assert(ext_len <= size_of(ext));
-            string_copy(ext, start, ext_len);
-            if(strings_equal(ext_len, ext, 
-                             result.gl_arb_framebuffer_srgb.name.size, 
-                             result.gl_arb_framebuffer_srgb.name.data)){
+            str_copy(ext, start, ext_len);
+            if(str_equal(ext_len, ext, 
+                         result.gl_arb_framebuffer_srgb.name.size, 
+                         result.gl_arb_framebuffer_srgb.name.data)){
                 result.gl_arb_framebuffer_srgb.supported = true;
             }
-            else if(strings_equal(ext_len, ext,
-                                  result.gl_ext_texture_srgb_decode.name.size, 
-                                  result.gl_ext_texture_srgb_decode.name.data)){
+            else if(str_equal(ext_len, ext,
+                              result.gl_ext_texture_srgb_decode.name.size, 
+                              result.gl_ext_texture_srgb_decode.name.data)){
                 result.gl_ext_texture_srgb_decode.supported = true;
             }
             start = (end + 1);
