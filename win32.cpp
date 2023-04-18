@@ -277,7 +277,7 @@ int WINAPI WinMain(HINSTANCE instance, HINSTANCE prev_instance, PSTR cmd_line, i
     U32 size = GetCurrentDirectory(sizeof(working_dir), working_dir);
     working_dir[size] = 0;
     Str8 app_dll = str8("\\app.dll");
-    str_concat();
+    //str_concat(working_dir, app_dll);
 #if 0
     strncat(working_dir, app_dll.data, app_dll.size);
 #else
@@ -285,8 +285,6 @@ int WINAPI WinMain(HINSTANCE instance, HINSTANCE prev_instance, PSTR cmd_line, i
         char *app_dll_name = "\\app.dll";
         MemIndex app_dll_length = str_length(app_dll_name);
         str_concat(working_dir, app_dll_name);
-        
-        
     }
 #endif
     //working_dir[size + app_dll.size] = 0;
