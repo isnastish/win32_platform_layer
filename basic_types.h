@@ -3,14 +3,13 @@
 #include <stdio.h>
 #include <malloc.h>
 #include <stdint.h>
-#include <assert.h>
 #include <string.h>
 #include <stdarg.h>
+#include <string>
 
-#undef assert
 #define assert(expr) if(!(expr)){ *((int *)0) = 0xff; }else{}
-
 #define size_of(array) (sizeof(array) / sizeof((array)[0]))
+#define array_count(array) (sizeof(array) / sizeof((array)[0]))
 
 #define function static
 #define global static
@@ -47,9 +46,9 @@ typedef uintptr_t Umm;
 
 union V2{
     struct{
-        F32 x, y;
+        float x, y;
     };
-    F32 e[2];
+    float e[2];
 };
 
 inline function V2 v2(F32 x=0.0f, F32 y=0.0f){
@@ -227,6 +226,31 @@ inline char *my_sprintf(char *buf, MemIndex buf_size, char *fmt, ...){
                     buf[pos++] = '0';
                 }
             }break;
+            //TODO(alexey): In the future support (V|v)(2|3|4)(i|f) -> V2f, v2f, V3i ...
+            case 'v':
+            case 'V':{
+                at += 1;
+                if(*at == '2'){
+                    V2 value = va_arg(args_list, V2);
+                    std::string x = std::to_string(value.x);
+                    std::string y = std::to_string(value.y);
+                    char *cx = (char *)x.c_str();
+                    char *cy = (char *)y.c_str();
+                    while(*cx){
+                        buf[pos++] = *cx++;
+                    }
+                    buf[pos++] = ',';
+                    buf[pos++] = ' ';
+                    while(*cy){
+                        buf[pos++] = *cy++;
+                    }
+                }
+                else{
+                    //TODO(alexey): Format is not supported.
+                    assert(0);
+                }
+            }break;
+            
             default:{
                 //TODO(alexey): Error handling, invalid format specifier!
                 assert(0);
@@ -236,6 +260,25 @@ inline char *my_sprintf(char *buf, MemIndex buf_size, char *fmt, ...){
     buf[pos] = 0;
     va_end(args_list);
     return(buf);
+}
+
+
+// TODO(alx): Optimize concatenation function. And maybe return the number of copied characters into the destination buffer.
+function void cat_strings(MemIndex source_a_count, char *source_a,
+                          MemIndex source_b_count, char *source_b,
+                          MemIndex dest_count, char *dest){
+    assert((source_a_count + source_b_count + 1) <= dest_count); // reserve 1 for null-terminated character.
+    for(I32 index = 0;
+        index < source_a_count;
+        index += 1){
+        *dest++ = *source_a++;
+    }
+    for(I32 index = 0;
+        index < source_b_count;
+        index += 1){
+        *dest++ = *source_b++;
+    }
+    *dest++ = 0;
 }
 
 #define BASIC_TYPES_H

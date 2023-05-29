@@ -1,6 +1,6 @@
-#ifndef WIN32_H
-
+#ifndef WINDOWS_SLIM_H
 #include "platform.h"
+
 #define WIN32_LEAN_AND_MEAN
 #define NOGDICAPMASKS //     - CC_*, LC_*, PC_*, CP_*, TC_*, RC_
 #define NOSYSMETRICS //      - SM_*
@@ -36,9 +36,8 @@
 #include <xinput.h>
 #include <gl/gl.h>
 #include <shlwapi.h>
-#include <objbase.h> //for CoInitialize/CoUninitialize
+#include <objbase.h>
 
-//NOTE(alexey): Just for debugging.
 #if INTERNAL_BUILD
 #define debug_break() __debugbreak();
 #define debug_out(s) OutputDebugStringA((LPCSTR)(s))
@@ -63,15 +62,11 @@ XINPUT_SET_STATE(xinput_set_state_stub){ return(ERROR_DEVICE_NOT_CONNECTED); }
 global XInputSetStatePtr xinput_set_state_ptr = xinput_set_state_stub;
 #define XInputSetState xinput_set_state_ptr
 
-struct Win32State{
-    //Just a placeholder for all the global variables.(device_context, global_running ...)
-};
-
 struct Win32AppCode{
     HMODULE dll;
     AppUpdateAndRenderPtr update_and_render;
-    B32 valid;
+    bool valid;
 };
 
-#define WIN32_H
-#endif //WIN32_H
+#define WINDOWS_SLIM_H
+#endif //WINDOWS_SLIM_H

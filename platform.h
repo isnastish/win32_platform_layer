@@ -7,7 +7,6 @@ typedef void *(*AllocateMemoryPtr)(I64 size, void *base_address);
 #define PLATFORM_FREE_MEMORY(name) void name(void *memory)
 typedef void (*FreeMemoryPtr)(void *memory);
 
-//maybe prefix with DEBUG as well?
 struct FileLoadResult{
     I64 size;
     I64 compressed;
@@ -24,65 +23,42 @@ typedef B32 (*WriteEntireFilePtr)(char *file_name, I64 size, void *memory);
 typedef void (*FreeFilePtr)(void *memory);
 
 struct PlatformApi{
-    //file io
     LoadEntireFilePtr load_entire_file;
     WriteEntireFilePtr write_entire_file;
     FreeFilePtr free_file;
-    
-    //memory
     AllocateMemoryPtr allocate_memory;
     FreeMemoryPtr free_memory;
 };
 
 struct Memory{
     B32 initialized;
-    
     I64 frame_storage_size;
     void *frame_storage;
-    
     I64 permanent_storage_size;
     void *permanent_storage;
-    
     PlatformApi *platform;
 };
 
-struct Button{
-    B32 was_down;
-    B32 is_down;
+// TODO(alx): Study Casey's approach of handling input. (coputing half_transiions rather than sending events)
+struct ButtonState{
+    I32 half_transition_count;
+    B32 ended_down;
 };
 
-#define GAMEPAD_BUTTONS_COUNT 12u
-struct Gamepad{
-    union{
-        struct{
-            Button up;
-            Button down;
-            Button left;
-            Button right;
-            Button a_button;
-            Button b_button;
-            Button x_button;
-            Button y_button;
-            Button back;
-            Button start;
-            Button l_shoulder;
-            Button r_shoulder;
-        };
-        Button buttons[GAMEPAD_BUTTONS_COUNT];
-    };
-    V2 l_stick;
-    V2 r_stick;
-    V2 trigger;
+// A controller can be either a gamepad or keyboard controller
+struct Controller{
+    ButtonState a_button;
+    B32 is_connected;
 };
 
-#define GAMEPADS_MAX_COUNT 8u
+#define MAX_CONTROLLER_COUNT 4u // + 1 for keyboard controller
 struct Input{
-    Gamepad gamepads[GAMEPADS_MAX_COUNT];
+    Controller controllers[MAX_CONTROLLER_COUNT];
 };
 
 global PlatformApi *platform;
 
-#define APP_UPDATE_AND_RENDER(name) void name(Input *input, Memory *memory)
+#define APP_UPDATE_AND_RENDER(name) void name(Input *_input, Memory *_memory)
 typedef void (*AppUpdateAndRenderPtr)(Input *input, Memory *memory);
 
 #define PLATFORM_H
